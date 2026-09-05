@@ -1,0 +1,51 @@
+# Dependencies
+node_modules/
+
+# Build output
+out/
+dist/
+build/
+dist_electron/
+release/
+
+# Electron builder output
+*.exe
+*.dmg
+*.AppImage
+*.snap
+*.deb
+*.rpm
+*.tar.gz
+*.zip
+
+# Logs
+*.log*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Lint / Type check cache
+.eslintcache
+*.tsbuildinfo
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# CLI sidecar binaries (built by scripts/build-cli.mjs, not committed; keep .gitkeep)
+binaries/*/struct_topology*
+
+# CLI source clone cache (populated by scripts/build-cli.mjs)
+.cli-src/

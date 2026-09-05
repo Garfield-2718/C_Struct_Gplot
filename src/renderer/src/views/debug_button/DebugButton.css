@@ -1,0 +1,74 @@
+/* ========== 调试按钮容器 ========== */
+.debug-button-wrapper {
+        width: 100%;
+        height: 60px;
+        mix-blend-mode: normal;
+}
+
+/* ========== 按钮主体 ========== */
+.debug-button-body {
+        overflow: hidden;
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        justify-content: center;
+        align-items: center;
+        padding: 40px;
+        border-radius: 10px;
+        background-color: rgba(151, 71, 255, 0.3);
+        mix-blend-mode: normal;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+}
+
+.debug-button-body:hover {
+        background-color: rgba(151, 71, 255, 0.45);
+}
+
+.debug-button-body:active {
+        background-color: rgba(151, 71, 255, 0.55);
+}
+
+/* ========== 箭头圆圈图标（纯 CSS） ========== */
+.debug-button-icon {
+        width: 40px;
+        height: 40px;
+        flex-shrink: 0;
+        position: relative;
+}
+
+/* 外圈 */
+.debug-button-icon::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border: 2px solid rgb(151, 71, 255);
+        border-radius: 50%;
+        box-sizing: border-box;
+}
+
+/* 箭头横线 */
+.debug-button-icon::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 33.3%;
+        width: 33.3%;
+        height: 2px;
+        background-color: rgb(151, 71, 255);
+        transform: translateY(-50%);
+}
+
+/* 箭头尖端（>） */
+.debug-button-arrow {
+        position: absolute;
+        top: 50%;
+        right: 14.6%;
+        width: 10px;
+        height: 10px;
+        border-top: 2px solid rgb(151, 71, 255);
+        border-right: 2px solid rgb(151, 71, 255);
+        transform: translateY(-50%) rotate(45deg);
+}

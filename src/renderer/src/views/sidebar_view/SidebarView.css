@@ -1,0 +1,237 @@
+/* ========== 侧边栏：贴靠画布左侧，宽度由拖拽手柄动态控制 ========== */
+.sidebar-panel {
+        position: absolute;
+        top: 0;
+        left: 0;
+        display: flex;
+        flex-direction: column;
+        width: var(--sidebar-width);
+        height: 100%;
+        background-color: #fdfdfd;
+        box-shadow: 2px 0 6px rgba(0, 0, 0, 0.15);
+        user-select: none;
+}
+
+/* ========== 内容区：三段式（元素信息 / 父节点信息 / 子节点信息），超出滚动 ========== */
+.sidebar-content {
+        flex: 1;
+        overflow-y: auto;
+        color: #333333;
+}
+
+/* ========== 分段：标题栏（点击折叠）+ 定高内容区（可滚动）+ 底边框拖拽条 ========== */
+.sidebar-section {
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+}
+
+/* ========== 分段标题栏：带折叠箭头，点击切换折叠/展开 ========== */
+.sidebar-section-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-bottom: 1px solid #e0e0e0;
+        cursor: pointer;
+}
+
+.sidebar-section-header:hover {
+        background-color: #f0f4f8;
+}
+
+/* 折叠箭头：展开时指向下，折叠时旋转指向右 */
+.sidebar-collapse-arrow {
+        flex-shrink: 0;
+        width: 6px;
+        height: 6px;
+        border-right: 1.5px solid #666666;
+        border-bottom: 1.5px solid #666666;
+        transform: rotate(45deg);
+        transition: transform 0.15s ease;
+}
+
+.sidebar-collapse-arrow.is-collapsed {
+        transform: rotate(-45deg);
+}
+
+.sidebar-section-title {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 600;
+        color: #666666;
+}
+
+/* ========== 分段内容区：高度由拖拽控制，超出滚动 ========== */
+.sidebar-section-body {
+        overflow-y: auto;
+        padding: 4px 0;
+}
+
+/* 各段高度引用根节点 CSS 变量，由拖拽动态更新 */
+.sidebar-section-body--element-info {
+        height: var(--element-info-height);
+}
+
+.sidebar-section-body--parent-nodes {
+        height: var(--parent-nodes-height);
+}
+
+.sidebar-section-body--child-nodes {
+        height: var(--child-nodes-height);
+}
+
+/* ========== 列表通用：去除默认样式，每项占一行 ========== */
+.sidebar-info-list,
+.sidebar-node-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+}
+
+/* ========== 元素信息行：键值对布局 ========== */
+.sidebar-info-row {
+        display: flex;
+        gap: 8px;
+        padding: 4px 12px;
+        font-size: 12px;
+        line-height: 20px;
+}
+
+.sidebar-info-key {
+        flex-shrink: 0;
+        width: 56px;
+        color: #999999;
+}
+
+.sidebar-info-value {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+}
+
+/* ========== 节点信息行：行侧类 PS 显隐按键 + 节点名称 ========== */
+.sidebar-node-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 12px;
+        font-size: 12px;
+        line-height: 20px;
+}
+
+.sidebar-node-row:hover {
+        background-color: #f0f4f8;
+}
+
+.sidebar-node-label {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+}
+
+/* 行隐藏后文本变淡，提示当前不可见 */
+.sidebar-node-row.is-hidden .sidebar-node-label {
+        color: #bbbbbb;
+}
+
+/* ========== 显隐按键：眼睛图标，点击切换行可见状态 ========== */
+.sidebar-visibility-toggle {
+        display: flex;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        padding: 0;
+        border: none;
+        background: transparent;
+        color: #666666;
+        cursor: pointer;
+}
+
+.sidebar-visibility-toggle.is-off {
+        color: #cccccc;
+}
+
+/* 眼睛图标：45° 旋转的圆角矩形模拟眼眶轮廓，::before 为瞳孔 */
+.sidebar-eye-icon {
+        position: relative;
+        display: block;
+        width: 12px;
+        height: 12px;
+        border: 1.5px solid currentColor;
+        border-radius: 75% 15%;
+        transform: rotate(45deg);
+}
+
+.sidebar-eye-icon::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 4px;
+        height: 4px;
+        background-color: currentColor;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+}
+
+/* 隐藏状态：眼睛叠加斜线表示已关闭 */
+.sidebar-visibility-toggle.is-off .sidebar-eye-icon::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: -4px;
+        width: 20px;
+        height: 1.5px;
+        background-color: currentColor;
+        transform: translateY(-50%);
+}
+
+/* ========== 分段底边框拖拽条：光标提示可纵向拖动调节高度 ========== */
+.sidebar-section-resizer {
+        flex-shrink: 0;
+        height: 5px;
+        border-bottom: 1px solid #e0e0e0;
+        cursor: row-resize;
+}
+
+/* 悬停/拖动时高亮边框，反馈当前调节的边界 */
+.sidebar-section-resizer:hover,
+.sidebar-section-resizer:active {
+        border-bottom-color: rgba(33, 150, 243, 0.6);
+        background-color: rgba(33, 150, 243, 0.15);
+}
+
+/* ========== 分段折叠/展开过渡：内容区与拖拽条高度、内边距收缩到 0 ========== */
+/* 需置于内容区/拖拽条规则之后，同优先级下以覆盖其高度与内边距 */
+.sidebar-collapse-enter-active,
+.sidebar-collapse-leave-active {
+        overflow: hidden;
+        transition: height 0.2s ease, padding 0.2s ease;
+}
+
+.sidebar-collapse-enter-from,
+.sidebar-collapse-leave-to {
+        height: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+}
+
+/* ========== 拖拽手柄：覆盖侧边栏右缘，光标提示可拖动 ========== */
+.sidebar-resize-handle {
+        position: absolute;
+        top: 0;
+        right: var(--sidebar-handle-right);
+        width: 8px;
+        height: 100%;
+        cursor: col-resize;
+}
+
+/* 手柄悬停/拖动时高亮中缝，反馈当前调节的边界 */
+.sidebar-resize-handle:hover,
+.sidebar-resize-handle:active {
+        background-color: rgba(33, 150, 243, 0.35);
+}

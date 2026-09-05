@@ -1,0 +1,29 @@
+/* ========== 画布视口 ========== */
+.canvas-wrapper {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        position: relative;
+        user-select: none;
+}
+
+/* ========== Vue Flow 节点编辑器：铺满视口，底色与参考 SVG（#FAFAFA）一致 ========== */
+.node-editor {
+        width: 100%;
+        height: 100%;
+        background-color: #fafafa;
+}
+
+/* 点阵背景中点的颜色（覆盖 Background 组件 SVG 的 fill 表现属性） */
+.node-editor .vue-flow__background circle {
+        fill: #dcdee0;
+}
+
+/* ========== 调试按钮定位容器（屏幕固定，不受平移缩放影响） ========== */
+.debug-button-position {
+        position: absolute;
+        left: 50%;
+        bottom: 24px;
+        width: 200px;
+        transform: translateX(-50%);
+}

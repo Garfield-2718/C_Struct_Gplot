@@ -1,0 +1,23 @@
+import { resolve } from 'path'
+import { defineConfig } from 'electron-vite'
+import vue from '@vitejs/plugin-vue'
+
+export default defineConfig({
+        main: {},
+        preload: {},
+        renderer: {
+                resolve: {
+                        alias: {
+                                '@renderer': resolve('src/renderer/src'),
+                                '@': resolve('src/renderer/src')
+                        }
+                },
+                plugins: [vue()],
+                server: {
+                        watch: {
+                                usePolling: true,
+                                interval: 300
+                        }
+                }
+        }
+})

@@ -1,0 +1,45 @@
+<template>
+        <div class="struct-node" :style="{ width: `${data.width}px` }">
+                <div class="struct-node-header" :class="`struct-node-header-${headerKind}`">
+                        <Handle
+                                id="header"
+                                type="target"
+                                :position="Position.Left"
+                                class="struct-node-target-handle"
+                        />
+                        <span class="struct-node-title">{{ data.title }}</span>
+                </div>
+                <template v-if="data.collapsed">
+                        <div class="struct-node-row struct-node-row-collapsed">......</div>
+                </template>
+                <template v-else>
+                        <div
+                                v-for="(field, index) in data.fields ?? []"
+                                :key="index"
+                                class="struct-node-row"
+                                :class="{ 'struct-node-row-striped': index % 2 === 0 }"
+                        >
+                                <Handle
+                                        :id="`field-${index}`"
+                                        type="source"
+                                        :position="Position.Right"
+                                        class="struct-node-source-handle"
+                                />
+                                <span class="struct-node-field">{{ field }}</span>
+                        </div>
+                </template>
+        </div>
+</template>
+
+<script lang="ts" setup>
+import { computed } from 'vue'
+import { Handle, Position } from '@vue-flow/core'
+import type { NodeProps } from '@vue-flow/core'
+import type { StructNodeData } from '../useCanvasView'
+import './StructNode.css'
+
+const props = defineProps<NodeProps<StructNodeData>>()
+
+/** 标题栏颜色种类：折叠节点统一为紫色，其余按元素类型 */
+const headerKind = computed(() => (props.data.collapsed ? 'collapsed' : props.data.kind))
+</script>
