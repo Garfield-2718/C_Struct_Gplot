@@ -1,6 +1,5 @@
 import { ref, watch } from 'vue'
 import type { Ref } from 'vue'
-import { useRouter } from 'vue-router'
 import type { Edge, GraphNode, Node, NodeTypesObject, ViewportTransform } from '@vue-flow/core'
 import StructNode from './struct_node/StructNode.vue'
 
@@ -197,7 +196,6 @@ interface CanvasViewApi {
         backgroundGap: Ref<number>
         dotSize: Ref<number>
         handleViewportChange: (viewport: ViewportTransform) => void
-        handleNavigateToLoading: () => void
 }
 
 /** Canvas 页面的组合式函数：基于 Vue Flow 的节点编辑器 */
@@ -255,19 +253,12 @@ export function useCanvasView(): CanvasViewApi {
                         )
         )
 
-        const router = useRouter()
-
-        function handleNavigateToLoading(): void {
-                router.push('/loading')
-        }
-
         return {
                 nodes,
                 edges,
                 nodeTypes,
                 backgroundGap,
                 dotSize,
-                handleViewportChange,
-                handleNavigateToLoading
+                handleViewportChange
         }
 }

@@ -18,12 +18,3 @@
 .node-editor .vue-flow__background circle {
         fill: #dcdee0;
 }
-
-/* ========== 调试按钮定位容器（屏幕固定，不受平移缩放影响） ========== */
-.debug-button-position {
-        position: absolute;
-        left: 50%;
-        bottom: 24px;
-        width: 200px;
-        transform: translateX(-50%);
-}

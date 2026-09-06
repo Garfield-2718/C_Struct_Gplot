@@ -11,6 +11,7 @@ export function useImportProject() {
         const isDragOver = ref(false)
         let lastDropTime = 0
         let observer: ResizeObserver | null = null
+        const router = useRouter()
 
         function updateScale(): void {
                 if (!canvasWrapper.value) return
@@ -34,11 +35,30 @@ export function useImportProject() {
         async function handleSelectFile(): Promise<void> {
                 // 拖拽松手后短时间内忽略 click 事件，避免重复触发
                 if (Date.now() - lastDropTime < 500) return
-                const filePath = await window.electron.ipcRenderer.invoke('select-project-file')
-                if (filePath) {
-                        console.log('[FileSelect] Selected:', filePath)
-                } else {
+                const filePath = await window.electron.ipcRenderer.invoke(
+                        'select-project-file',
+                        'file'
+                )
+                if (!filePath) {
                         console.log('[FileSelect] Cancelled')
+                        return
+                }
+                console.log('[FileSelect] Selected:', filePath)
+
+                // 先把文件路径交给主进程处理（不阻塞），随后立即进入 loading 页面等待结果
+                const processing = window.electron.ipcRenderer.invoke(
+                        'process-project-file',
+                        filePath
+                )
+                router.push('/loading')
+
+                // 等待主进程返回：成功进入 canvas 页面，失败返回导入页
+                const result = await processing
+                if (result?.status === 'success') {
+                        router.replace('/canvas')
+                } else {
+                        console.error('[FileSelect] 主进程处理失败:', result?.message)
+                        router.replace('/')
                 }
         }
 
@@ -54,8 +74,6 @@ export function useImportProject() {
                 const filePath = window.api.getPathForFile(files[0])
                 console.log('[FileDrop] Dropped:', filePath)
         }
-
-        const router = useRouter()
 
         function handleNavigateToLoading(): void {
                 router.push('/loading')

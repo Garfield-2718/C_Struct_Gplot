@@ -1,0 +1,112 @@
+/* ========== 底边栏：贴靠画布底部居中，宽度由内部按键决定；纵向分为顶部三角手柄与按键组 ========== */
+.bottombar-panel {
+        position: absolute;
+        bottom: 16px;
+        left: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        padding: 4px;
+        background-color: #fdfdfd;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        transform: translateX(-50%);
+        user-select: none;
+}
+
+/* ========== 收起/展开手柄：占据底边栏顶部整宽，收起后即为底边栏仅存的可点击区 ========== */
+.bottombar-collapse-handle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 48px;
+        height: 14px;
+        padding: 0;
+        border: none;
+        border-bottom: 1px solid transparent;
+        border-radius: 4px 4px 0 0;
+        background: transparent;
+        color: #666666;
+        cursor: pointer;
+}
+
+/* 展开态下手柄与按键组之间显示分隔线，收起态隐藏避免出现多余横线 */
+.bottombar-panel:not(.is-collapsed) .bottombar-collapse-handle {
+        border-bottom-color: #e0e0e0;
+}
+
+.bottombar-collapse-handle:hover {
+        background-color: #f0f4f8;
+        color: #333333;
+}
+
+/* 指向三角：纯 CSS 边框绘制，展开态向下（点击收起），收起态旋转 180° 向上（点击展开） */
+.bottombar-collapse-arrow {
+        display: block;
+        width: 0;
+        height: 0;
+        border-top: 5px solid currentColor;
+        border-right: 6px solid transparent;
+        border-left: 6px solid transparent;
+        transition: transform 0.2s ease;
+}
+
+.bottombar-panel.is-collapsed .bottombar-collapse-arrow {
+        transform: rotate(180deg);
+}
+
+/* ========== 按键组外层：网格轨道 1fr → 0fr 实现宽高同步收缩，无需预设尺寸即可过渡 ========== */
+/* visibility 同步关闭，避免收起后被裁剪的按键仍可通过键盘聚焦 */
+.bottombar-tools-wrapper {
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr;
+        overflow: hidden;
+        opacity: 1;
+        visibility: visible;
+        transition:
+                grid-template-columns 0.2s ease,
+                grid-template-rows 0.2s ease,
+                opacity 0.2s ease,
+                visibility 0.2s ease;
+}
+
+.bottombar-panel.is-collapsed .bottombar-tools-wrapper {
+        grid-template-columns: 0fr;
+        grid-template-rows: 0fr;
+        opacity: 0;
+        visibility: hidden;
+}
+
+/* ========== 按键组：横向排列，按键数量与宽度共同决定底边栏宽度 ========== */
+/* 作为网格项需允许收缩到 0，超出部分由外层裁剪 */
+.bottombar-tools {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        min-width: 0;
+        min-height: 0;
+        overflow: hidden;
+}
+
+/* ========== 工具按键：无边框文本按键，配色与侧边栏保持一致 ========== */
+.bottombar-tool-button {
+        padding: 4px 12px;
+        border: none;
+        border-radius: 4px;
+        background: transparent;
+        font-family: inherit;
+        font-size: 13px;
+        line-height: 20px;
+        color: #666666;
+        cursor: pointer;
+}
+
+.bottombar-tool-button:hover {
+        background-color: #f0f4f8;
+}
+
+.bottombar-tool-button:active {
+        background-color: #e2ebf5;
+}

@@ -15,9 +15,7 @@
                         <Controls position="top-right" />
                 </VueFlow>
                 <SidebarView />
-                <div class="debug-button-position">
-                        <DebugButton @click="handleNavigateToLoading" />
-                </div>
+                <BottombarView />
         </div>
 </template>
 
@@ -26,20 +24,12 @@ import { VueFlow } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
 import { useCanvasView } from './useCanvasView'
-import DebugButton from '@/views/debug_button/DebugButton.vue'
 import SidebarView from '@/views/sidebar_view/SidebarView.vue'
+import BottombarView from '@/views/bottombar_view/BottombarView.vue'
 import '@vue-flow/core/dist/style.css'
 import '@vue-flow/core/dist/theme-default.css'
 import '@vue-flow/controls/dist/style.css'
 import './CanvasView.css'
 
-const {
-        nodes,
-        edges,
-        nodeTypes,
-        backgroundGap,
-        dotSize,
-        handleViewportChange,
-        handleNavigateToLoading
-} = useCanvasView()
+const { nodes, edges, nodeTypes, backgroundGap, dotSize, handleViewportChange } = useCanvasView()
 </script>
