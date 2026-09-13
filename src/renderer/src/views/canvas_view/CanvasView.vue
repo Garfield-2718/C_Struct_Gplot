@@ -14,8 +14,15 @@
                         <Background variant="dots" :gap="backgroundGap" :size="dotSize" />
                         <Controls position="top-right" />
                 </VueFlow>
-                <SidebarView />
-                <BottombarView />
+                <!-- 空画布提示：无节点时居中显示，pointer-events:none 不遮挡交互 -->
+                <div v-if="!nodes.length" class="canvas-empty-hint">点击底部「添加节点」开始</div>
+                <SidebarView
+                        :selected-node="selectedNodeData"
+                        :canvas-node-ids="canvasNodeIds"
+                        @show-node="addStructNode"
+                        @hide-node="removeStructNode"
+                />
+                <BottombarView @node-added="addStructNode" />
         </div>
 </template>
 
@@ -31,5 +38,16 @@ import '@vue-flow/core/dist/theme-default.css'
 import '@vue-flow/controls/dist/style.css'
 import './CanvasView.css'
 
-const { nodes, edges, nodeTypes, backgroundGap, dotSize, handleViewportChange } = useCanvasView()
+const {
+        nodes,
+        edges,
+        nodeTypes,
+        backgroundGap,
+        dotSize,
+        handleViewportChange,
+        addStructNode,
+        removeStructNode,
+        selectedNodeData,
+        canvasNodeIds
+} = useCanvasView()
 </script>

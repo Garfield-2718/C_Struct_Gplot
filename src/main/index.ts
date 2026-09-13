@@ -1,9 +1,9 @@
-import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
-import { join, basename, extname, dirname } from 'path'
-import { mkdirSync } from 'fs'
+import { app, shell, BrowserWindow } from 'electron'
+import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { registerCliIpc, spawnCli } from './cli-service'
+import { registerCliIpc } from './cli-service'
+import { registerIpcHandlers } from './ipc-handlers'
 
 // WSL2/Linux 虚拟显卡驱动可能导致 GPU 进程反复崩溃（exit_code=11），
 // 此环境下关闭硬件加速改用软件渲染；Windows/macOS 保持默认 GPU 加速
@@ -51,66 +51,15 @@ function createWindow(): void {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-// IPC: 打开文件选择对话框
-// mode 为 'file'（默认，选择文件）或 'directory'（选择目录）。
-// Windows/Linux 的原生对话框无法同时充当文件选择器与目录选择器：传入
-// ['openFile', 'openDirectory'] 时系统只会展示目录选择器，导致文件无法被选中，
-// 因此这两个平台按 mode 二选一；macOS 支持二者共存，文件模式下仍可顺带选中目录。
-ipcMain.handle('select-project-file', async (_event, mode?: 'file' | 'directory') => {
-        let properties: Array<'openFile' | 'openDirectory'> = ['openFile']
-        if (mode === 'directory') {
-                properties = ['openDirectory']
-        } else if (process.platform === 'darwin') {
-                properties = ['openFile', 'openDirectory']
-        }
-        const result = await dialog.showOpenDialog({
-                properties,
-                filters: [{ name: '所有文件', extensions: ['*'] }]
-        })
-        if (result.canceled || result.filePaths.length === 0) {
-                return null
-        }
-        return result.filePaths[0]
-})
-
-// IPC: 接收渲染进程传来的文件路径，调用 CLI 二进制以 init 模式解析
-ipcMain.handle('process-project-file', async (_event, filePath: string) => {
-        console.log('[Main] 接收到待处理的文件路径:', filePath)
-        const trimmed = typeof filePath === 'string' ? filePath.trim() : ''
-        if (!trimmed) {
-                return { status: 'failure', filePath, message: '文件路径无效' }
-        }
-        // db 输出目录：可执行文件所在目录下 struct_list_db/
-        const appDir = app.isPackaged ? dirname(app.getPath('exe')) : app.getAppPath()
-        const dbDir = join(appDir, 'struct_list_db')
-        mkdirSync(dbDir, { recursive: true })
-        // db 文件名：取传入 filePath 的最后一段文件名（去后缀）+ .db
-        const dbName = basename(trimmed, extname(trimmed)) + '.db'
-        // 调用 CLI 二进制: --mode=init --input-file --db-path --db-name
-        const result = await spawnCli([
-                '--mode=init',
-                `--input-file=${trimmed}`,
-                `--db-path=${dbDir}`,
-                `--db-name=${dbName}`
-        ])
-        const dbFilePath = join(dbDir, dbName)
-        console.log('[Main] db 文件路径:', dbFilePath)
-        if (result.code === 0) {
-                return { status: 'success', filePath, message: result.stdout || '处理完成' }
-        }
-        return {
-                status: 'failure',
-                filePath,
-                message: result.stderr || `CLI 退出码: ${result.code}`
-        }
-})
-
 app.whenReady().then(() => {
         // Set app user model id for windows
         electronApp.setAppUserModelId('com.electron')
 
         // 注册 CLI 相关 IPC（cli:locate / cli:init / cli:svg，当前 init/svg 为打桩）
         registerCliIpc()
+
+        // 注册与渲染进程通信的 IPC（select-project-file / process-project-file / add-node）
+        registerIpcHandlers()
 
         // Default open or close DevTools by F12 in development
         // and ignore CommandOrControl + R in production.

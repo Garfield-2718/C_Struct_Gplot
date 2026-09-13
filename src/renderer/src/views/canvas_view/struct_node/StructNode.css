@@ -34,18 +34,20 @@
 }
 
 .struct-node-title {
+        max-width: 100%;
         overflow: hidden;
         color: white;
         font-weight: bold;
         white-space: nowrap;
+        text-overflow: ellipsis;
 }
 
-/* ========== 字段行：26px 等高，偶数行斑马纹底，行间细分隔线 ========== */
+/* ========== 字段行：至少 26px 高（内容换行时可增高），偶数行斑马纹底，行间细分隔线 ========== */
 .struct-node-row {
         position: relative;
         display: flex;
         align-items: center;
-        height: 26px;
+        min-height: 26px;
         border-bottom: 0.5px solid #cccccc;
 }
 
@@ -57,11 +59,16 @@
         background: #f5f5f5;
 }
 
+/* 字段文本：卡片宽度封顶后超长内容在行内换行（而非被裁剪） */
 .struct-node-field {
-        overflow: hidden;
-        padding-left: 8px;
+        flex: 1 1 auto;
+        min-width: 0;
+        padding: 4px 10px 4px 8px;
         color: #333333;
-        white-space: nowrap;
+        line-height: 1.25;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
 }
 
 /* 折叠节点的省略号内容行 */

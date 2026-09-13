@@ -28,12 +28,64 @@
                         </div>
                 </div>
         </div>
+
+        <!-- 添加节点对话框：Teleport 到 body，避免底边栏 transform 影响 fixed 遮罩定位 -->
+        <Teleport to="body">
+                <div
+                        v-if="isAddNodeDialogVisible"
+                        class="add-node-overlay"
+                        @click.self="handleAddNodeCancel"
+                >
+                        <div class="add-node-dialog" role="dialog" aria-modal="true">
+                                <div class="add-node-title">添加节点</div>
+                                <input
+                                        ref="addNodeInputRef"
+                                        v-model="newNodeName"
+                                        class="add-node-input"
+                                        type="text"
+                                        placeholder="请输入要新增的节点"
+                                        @keyup.enter="handleAddNodeConfirm"
+                                        @keyup.esc="handleAddNodeCancel"
+                                />
+                                <div class="add-node-actions">
+                                        <button
+                                                class="add-node-button"
+                                                @click="handleAddNodeCancel"
+                                        >
+                                                取消
+                                        </button>
+                                        <button
+                                                class="add-node-button add-node-button-primary"
+                                                @click="handleAddNodeConfirm"
+                                        >
+                                                确认
+                                        </button>
+                                </div>
+                        </div>
+                </div>
+        </Teleport>
 </template>
 
 <script lang="ts" setup>
+import { ref } from 'vue'
 import { useBottombarView } from './useBottombarView'
+import type { StructNodeRecord } from '@/views/canvas_view/useCanvasView'
 import './BottombarView.css'
 
-const { collapsed, handleToggleCollapse, handleSelectModeClick, handleAddNodeClick } =
-        useBottombarView()
+/** 向父级 CanvasView 上报查询到的结构体记录，由其渲染到画布 */
+const emit = defineEmits<{ (e: 'node-added', record: StructNodeRecord): void }>()
+
+/** 对话框输入框引用：本地声明并绑定到模板 ref，交由组合式函数在打开时聚焦 */
+const addNodeInputRef = ref<HTMLInputElement | null>(null)
+
+const {
+        collapsed,
+        handleToggleCollapse,
+        handleSelectModeClick,
+        handleAddNodeClick,
+        isAddNodeDialogVisible,
+        newNodeName,
+        handleAddNodeConfirm,
+        handleAddNodeCancel
+} = useBottombarView(addNodeInputRef, (record) => emit('node-added', record))
 </script>

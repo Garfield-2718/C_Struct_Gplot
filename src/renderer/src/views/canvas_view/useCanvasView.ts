@@ -1,10 +1,16 @@
-import { ref, watch } from 'vue'
-import type { Ref } from 'vue'
+import { ref, watch, nextTick, markRaw, computed } from 'vue'
+import type { Ref, ComputedRef } from 'vue'
+import { useVueFlow } from '@vue-flow/core'
 import type { Edge, GraphNode, Node, NodeTypesObject, ViewportTransform } from '@vue-flow/core'
 import StructNode from './struct_node/StructNode.vue'
 
-/** 自定义节点类型注册：struct 卡片节点 */
-const nodeTypes: NodeTypesObject = { struct: StructNode }
+/**
+ * 自定义节点类型注册：struct 卡片节点。
+ * 用 markRaw 标记组件：nodeTypes 传入 VueFlow 后会被纳入其响应式 store，
+ * 组件对象若被 Proxy 代理会触发 "Vue received a Component that was made a reactive object"
+ * 警告并带来无谓的依赖追踪开销；markRaw 使 Vue 跳过对它的响应式化。
+ */
+const nodeTypes: NodeTypesObject = { struct: markRaw(StructNode) }
 
 /** 点阵间距在屏幕上允许的范围（px），超出后回绕到另一端 */
 const MIN_SCREEN_GAP = 30
@@ -26,6 +32,20 @@ export interface StructNodeData {
         collapsed?: boolean
         /** 字段行文本列表 */
         fields?: string[]
+        /** 与 fields 同序：各字段指向的子结构体 hash（无则 null），用于自动连线 */
+        childHashes?: (string | null)[]
+        /** 引用当前结构体的父结构体 hash 列表（来自 relations 表），用于侧边栏展示 */
+        parentHashes?: string[]
+}
+
+/** 主进程 query-node 返回的结构体记录：ui_json 为画布格式 StructNodeData 的 JSON 字符串 */
+export interface StructNodeRecord {
+        id: number
+        hash: string
+        data_type_first: string
+        data_type_latter: string
+        source_file: string | null
+        ui_json: string
 }
 
 /** 连线样式：与 SVG 一致的灰色曲线，无箭头 */
@@ -51,143 +71,6 @@ function createStructEdge(id: string, source: string, sourceField: number, targe
         }
 }
 
-/** 初始节点：struct_mesh_leaf.svg 中的 14 张结构体卡片 */
-const initialNodes: Node[] = [
-        // 左列：根结构体
-        createStructNode('mesh_core_left', 65, 25, {
-                title: 'struct mesh_core',
-                kind: 'struct',
-                width: 185,
-                fields: ['struct mesh_leaf leaf', 'union mesh_hub hub', 'enum mesh_state state']
-        }),
-        createStructNode('mesh_root_a', 33, 159, {
-                title: 'struct mesh_root_a',
-                kind: 'struct',
-                width: 217,
-                fields: [
-                        'struct mesh_core core',
-                        'union mesh_hub hub',
-                        'struct mesh_leaf leaf',
-                        'enum mesh_state state',
-                        'union mesh_root_b *peer_b'
-                ]
-        }),
-        createStructNode('mesh_hub_left', 25, 345, {
-                title: 'union mesh_hub',
-                kind: 'union',
-                width: 225,
-                fields: [
-                        'struct mesh_leaf leaf',
-                        'enum mesh_state state',
-                        'struct mesh_core *core_ptr',
-                        'int raw'
-                ]
-        }),
-        createStructNode('mesh_root_b', 25, 505, {
-                title: 'union mesh_root_b',
-                kind: 'union',
-                width: 225,
-                fields: [
-                        'struct mesh_core core',
-                        'struct mesh_leaf leaf',
-                        'enum mesh_state state',
-                        'struct mesh_root_a *peer_a'
-                ]
-        }),
-        // 中列：展开的叶子节点及其成员类型
-        createStructNode('mesh_leaf', 350, 278, {
-                title: 'struct mesh_leaf (b0e19e)',
-                kind: 'struct',
-                width: 225,
-                fields: [
-                        'enum mesh_state state',
-                        'struct mesh_core *core_ptr',
-                        'union mesh_hub *hub_ptr'
-                ]
-        }),
-        createStructNode('mesh_state_full', 675, 32, {
-                title: 'enum mesh_state (6e56ad)',
-                kind: 'enum',
-                width: 209,
-                fields: ['MESH_IDLE', 'MESH_BUSY', 'MESH_DONE']
-        }),
-        createStructNode('mesh_core_full', 675, 222, {
-                title: 'struct mesh_core (525225)',
-                kind: 'struct',
-                width: 217,
-                fields: ['struct mesh_leaf leaf', 'union mesh_hub hub', 'enum mesh_state state']
-        }),
-        createStructNode('mesh_hub_full', 675, 455, {
-                title: 'union mesh_hub (4229e7)',
-                kind: 'union',
-                width: 225,
-                fields: [
-                        'struct mesh_leaf leaf',
-                        'enum mesh_state state',
-                        'struct mesh_core *core_ptr',
-                        'int raw'
-                ]
-        }),
-        // 右列：折叠节点（防止循环引用无限展开）
-        createStructNode('mesh_leaf_collapsed_1', 992, 166, {
-                title: 'struct mesh_leaf (b0e19e)',
-                kind: 'struct',
-                width: 217,
-                collapsed: true
-        }),
-        createStructNode('mesh_hub_collapsed_1', 992, 248, {
-                title: 'union mesh_hub (4229e7)',
-                kind: 'union',
-                width: 201,
-                collapsed: true
-        }),
-        createStructNode('mesh_state_collapsed_1', 992, 330, {
-                title: 'enum mesh_state (6e56ad)',
-                kind: 'enum',
-                width: 209,
-                collapsed: true
-        }),
-        createStructNode('mesh_leaf_collapsed_2', 1000, 412, {
-                title: 'struct mesh_leaf (b0e19e)',
-                kind: 'struct',
-                width: 217,
-                collapsed: true
-        }),
-        createStructNode('mesh_state_collapsed_2', 1000, 494, {
-                title: 'enum mesh_state (6e56ad)',
-                kind: 'enum',
-                width: 209,
-                collapsed: true
-        }),
-        createStructNode('mesh_core_collapsed', 1000, 576, {
-                title: 'struct mesh_core (525225)',
-                kind: 'struct',
-                width: 217,
-                collapsed: true
-        })
-]
-
-/** 初始连线：字段行 → 目标类型卡片，与 SVG 中的 13 条曲线一一对应 */
-const initialEdges: Edge[] = [
-        // 左列各根结构体的 leaf 字段 → mesh_leaf
-        createStructEdge('e-core_left-leaf', 'mesh_core_left', 0, 'mesh_leaf'),
-        createStructEdge('e-root_a-leaf', 'mesh_root_a', 2, 'mesh_leaf'),
-        createStructEdge('e-hub_left-leaf', 'mesh_hub_left', 0, 'mesh_leaf'),
-        createStructEdge('e-root_b-leaf', 'mesh_root_b', 1, 'mesh_leaf'),
-        // mesh_leaf 各字段 → 展开的成员类型
-        createStructEdge('e-leaf-state', 'mesh_leaf', 0, 'mesh_state_full'),
-        createStructEdge('e-leaf-core_ptr', 'mesh_leaf', 1, 'mesh_core_full'),
-        createStructEdge('e-leaf-hub_ptr', 'mesh_leaf', 2, 'mesh_hub_full'),
-        // mesh_core 各字段 → 折叠节点
-        createStructEdge('e-core-leaf', 'mesh_core_full', 0, 'mesh_leaf_collapsed_1'),
-        createStructEdge('e-core-hub', 'mesh_core_full', 1, 'mesh_hub_collapsed_1'),
-        createStructEdge('e-core-state', 'mesh_core_full', 2, 'mesh_state_collapsed_1'),
-        // mesh_hub 各字段 → 折叠节点
-        createStructEdge('e-hub-leaf', 'mesh_hub_full', 0, 'mesh_leaf_collapsed_2'),
-        createStructEdge('e-hub-state', 'mesh_hub_full', 1, 'mesh_state_collapsed_2'),
-        createStructEdge('e-hub-core_ptr', 'mesh_hub_full', 2, 'mesh_core_collapsed')
-]
-
 /** useCanvasView 的返回结构 */
 interface CanvasViewApi {
         nodes: Ref<Node[]>
@@ -196,12 +79,24 @@ interface CanvasViewApi {
         backgroundGap: Ref<number>
         dotSize: Ref<number>
         handleViewportChange: (viewport: ViewportTransform) => void
+        /** 依据主进程查询到的结构体记录，在画布上新增一个结构体卡片节点 */
+        addStructNode: (record: StructNodeRecord) => void
+        /** 按 hash 从画布移除节点渲染（保留红黑树缓存），供侧边栏「隐藏」父/子节点 */
+        removeStructNode: (hash: string) => void
+        /** 当前选中节点的数据（单选时取第一个），供侧边栏展示元素信息 */
+        selectedNodeData: Ref<StructNodeData | null>
+        /** 画布上所有节点的 id（hash）列表，供侧边栏同步眼睛显隐初值 */
+        canvasNodeIds: ComputedRef<string[]>
 }
 
 /** Canvas 页面的组合式函数：基于 Vue Flow 的节点编辑器 */
 export function useCanvasView(): CanvasViewApi {
-        const nodes = ref(initialNodes) as Ref<Node[]>
-        const edges = ref(initialEdges) as Ref<Edge[]>
+        const nodes = ref([]) as Ref<Node[]>
+        const edges = ref([]) as Ref<Edge[]>
+        const { fitView } = useVueFlow()
+
+        /** 已动态新增的节点数：用于错开新节点位置，避免相互重叠 */
+        let addedNodeCount = 0
 
         /** 背景点阵间距（流坐标），随缩放动态回绕，使屏幕点距保持在 [MIN_SCREEN_GAP, MAX_SCREEN_GAP] */
         const backgroundGap = ref(40)
@@ -218,7 +113,13 @@ export function useCanvasView(): CanvasViewApi {
                 dotSize.value = DOT_SCREEN_SIZE / zoom
         }
 
-        /** 节点选中状态变化时的触发逻辑（打桩）：后续在此实现选中后的实际业务，如展示元素详情、联动侧边栏 */
+        /** 当前选中节点的数据：单选时取第一个选中节点的 data，无选中时为 null，供侧边栏联动 */
+        const selectedNodeData = ref<StructNodeData | null>(null)
+
+        /** 画布上所有节点的 id（即结构体 hash）列表：供侧边栏判断父/子节点是否已渲染，同步眼睛显隐初值 */
+        const canvasNodeIds = computed(() => nodes.value.map((node) => node.id))
+
+        /** 节点选中状态变化时的触发逻辑：高亮关联连线并同步选中节点数据给侧边栏 */
         function handleSelectionChange(selectedNodes: Node[]): void {
                 // 高亮与选中节点相连的连线：连入选中节点或从选中节点连出的线变蓝，其余恢复默认灰色
                 const selectedIds = new Set(selectedNodes.map((node) => node.id))
@@ -229,11 +130,11 @@ export function useCanvasView(): CanvasViewApi {
                         return { ...edge, style: { ...EDGE_STYLE, stroke } }
                 })
 
-                // TODO: 替换打桩实现，根据 selectedNodes 触发实际业务逻辑
-                console.log(
-                        '[canvas] 选中节点:',
-                        selectedNodes.map((node) => node.id)
-                )
+                // 同步选中节点数据给侧边栏：取第一个选中节点的 data，无选中时置 null
+                selectedNodeData.value =
+                        selectedNodes.length > 0
+                                ? (selectedNodes[0].data as StructNodeData)
+                                : null
         }
 
         /**
@@ -253,12 +154,131 @@ export function useCanvasView(): CanvasViewApi {
                         )
         )
 
+        /**
+         * 为新加入的结构体节点构建与画布上「已存在」节点的连线（不递归加载缺失的子节点）：
+         * 正向——新节点各字段的 childHash 若已在画布，连「新节点字段 → 子节点」；
+         * 反向——画布上已有节点的字段 childHash 若指向新节点，补「已有节点字段 → 新节点」。
+         * 跳过自环与重复 id，返回新增的 Edge 列表。
+         */
+        function connectStructNode(hash: string, data: StructNodeData): Edge[] {
+                const existingIds = new Set(nodes.value.map((node) => node.id))
+                const existingEdgeIds = new Set(edges.value.map((edge) => edge.id))
+                const result: Edge[] = []
+                const pushEdge = (edge: Edge): void => {
+                        if (!existingEdgeIds.has(edge.id)) {
+                                existingEdgeIds.add(edge.id)
+                                result.push(edge)
+                        }
+                }
+                // 正向：新节点字段 → 已存在的子节点
+                const children = data.childHashes ?? []
+                children.forEach((childHash, fieldIndex) => {
+                        if (childHash && childHash !== hash && existingIds.has(childHash)) {
+                                pushEdge(
+                                        createStructEdge(
+                                                `e-${hash}-f${fieldIndex}-${childHash}`,
+                                                hash,
+                                                fieldIndex,
+                                                childHash
+                                        )
+                                )
+                        }
+                })
+                // 反向：已存在节点的字段 → 新节点
+                for (const node of nodes.value) {
+                        if (node.id === hash) continue
+                        const nodeData = node.data as StructNodeData | undefined
+                        const nodeChildren = nodeData?.childHashes ?? []
+                        nodeChildren.forEach((childHash, fieldIndex) => {
+                                if (childHash === hash) {
+                                        pushEdge(
+                                                createStructEdge(
+                                                        `e-${node.id}-f${fieldIndex}-${hash}`,
+                                                        node.id,
+                                                        fieldIndex,
+                                                        hash
+                                                )
+                                        )
+                                }
+                        })
+                }
+                return result
+        }
+
+        /**
+         * 依据主进程 query-node 返回的记录在画布新增结构体卡片节点：
+         * 解析 ui_json（画布格式 StructNodeData）→ 以 hash 为节点 id 去重 → 追加到 nodes →
+         * 与画布上已存在的相关节点自动连线 → 重新 fitView 使新节点进入视野。
+         */
+        function addStructNode(record: StructNodeRecord): void {
+                if (!record?.hash) {
+                        console.warn('[canvas] addStructNode: 记录缺少 hash，已忽略')
+                        return
+                }
+                if (nodes.value.some((node) => node.id === record.hash)) {
+                        console.log('[canvas] 节点已存在，跳过重复渲染:', record.hash)
+                        return
+                }
+                let data: StructNodeData
+                try {
+                        data = JSON.parse(record.ui_json) as StructNodeData
+                } catch (err) {
+                        console.error('[canvas] 解析节点 ui_json 失败:', err)
+                        return
+                }
+                // 简单网格布局：画布初始为空，新节点从左上角起按 4 列错位排布，避免相互重叠
+                const x = 40 + (addedNodeCount % 4) * 300
+                const y = 40 + Math.floor(addedNodeCount / 4) * 240
+                addedNodeCount++
+                nodes.value = [...nodes.value, createStructNode(record.hash, x, y, data)]
+                // 自动连线：仅连接画布上已存在的节点（正/反向），去重后并入 edges
+                const addedEdges = connectStructNode(record.hash, data)
+                if (addedEdges.length > 0) {
+                        edges.value = [...edges.value, ...addedEdges]
+                }
+                console.log(
+                        '[canvas] 已渲染新增节点:',
+                        record.hash,
+                        data.title,
+                        '新增连线',
+                        addedEdges.length
+                )
+                // 下一帧重新适配视图，确保新增节点可见
+                void nextTick(() => {
+                        try {
+                                fitView({ padding: 0.3, duration: 300 })
+                        } catch (err) {
+                                console.warn('[canvas] fitView 失败:', err)
+                        }
+                })
+        }
+
+        /**
+         * 按 hash 从画布移除节点的渲染（连同与其相连的连线），供侧边栏「隐藏」父/子节点使用。
+         * 仅移除画布显示，不触碰主进程红黑树缓存；再次「显示」时可复用缓存快速恢复渲染。
+         */
+        function removeStructNode(hash: string): void {
+                if (!nodes.value.some((node) => node.id === hash)) {
+                        console.log('[canvas] 节点不在画布上，跳过隐藏:', hash)
+                        return
+                }
+                nodes.value = nodes.value.filter((node) => node.id !== hash)
+                edges.value = edges.value.filter(
+                        (edge) => edge.source !== hash && edge.target !== hash
+                )
+                console.log('[canvas] 已隐藏节点（保留红黑树缓存）:', hash)
+        }
+
         return {
                 nodes,
                 edges,
                 nodeTypes,
                 backgroundGap,
                 dotSize,
-                handleViewportChange
+                handleViewportChange,
+                addStructNode,
+                removeStructNode,
+                selectedNodeData,
+                canvasNodeIds
         }
 }

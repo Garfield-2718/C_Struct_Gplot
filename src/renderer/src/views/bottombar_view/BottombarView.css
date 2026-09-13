@@ -110,3 +110,100 @@
 .bottombar-tool-button:active {
         background-color: #e2ebf5;
 }
+
+/* ========== 添加节点对话框：Teleport 至 body，全屏半透明遮罩 + 居中面板 ========== */
+.add-node-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(0, 0, 0, 0.35);
+}
+
+/* 对话框面板：配色与底边栏保持一致，纵向排列标题/输入框/操作区 */
+.add-node-dialog {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        box-sizing: border-box;
+        width: 320px;
+        padding: 20px;
+        background-color: #fdfdfd;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        user-select: none;
+}
+
+.add-node-title {
+        font-size: 15px;
+        font-weight: 600;
+        line-height: 22px;
+        color: #333333;
+}
+
+/* 节点内容输入框：底层以字符串保存，聚焦时高亮边框 */
+.add-node-input {
+        box-sizing: border-box;
+        width: 100%;
+        padding: 8px 10px;
+        background-color: #ffffff;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        font-family: inherit;
+        font-size: 13px;
+        line-height: 20px;
+        color: #333333;
+        outline: none;
+}
+
+.add-node-input:focus {
+        border-color: #7aa7d9;
+        box-shadow: 0 0 0 2px rgba(122, 167, 217, 0.2);
+}
+
+/* 操作区：确认/取消按键右对齐并列排放 */
+.add-node-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+}
+
+.add-node-button {
+        padding: 6px 16px;
+        background-color: #ffffff;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        font-family: inherit;
+        font-size: 13px;
+        line-height: 20px;
+        color: #666666;
+        cursor: pointer;
+}
+
+.add-node-button:hover {
+        background-color: #f0f4f8;
+}
+
+.add-node-button:active {
+        background-color: #e2ebf5;
+}
+
+/* 主操作按键（确认）：柔和蓝强调，与输入框聚焦色呼应 */
+.add-node-button-primary {
+        background-color: #7aa7d9;
+        border-color: #7aa7d9;
+        color: #ffffff;
+}
+
+.add-node-button-primary:hover {
+        background-color: #6a97c9;
+        border-color: #6a97c9;
+}
+
+.add-node-button-primary:active {
+        background-color: #5c88b8;
+        border-color: #5c88b8;
+}

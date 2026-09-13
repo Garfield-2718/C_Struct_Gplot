@@ -209,8 +209,22 @@
 </template>
 
 <script lang="ts" setup>
+import { toRef } from 'vue'
 import { useSidebarView } from './useSidebarView'
+import type { StructNodeData, StructNodeRecord } from '@/views/canvas_view/useCanvasView'
 import './SidebarView.css'
+
+const props = defineProps<{
+        selectedNode: StructNodeData | null
+        /** 画布上已渲染节点的 id（hash）列表：用于同步父/子节点行的眼睛显隐初值 */
+        canvasNodeIds: string[]
+}>()
+
+/** 向父级 CanvasView 上报显示/隐藏节点：显示交画布渲染新节点，隐藏交画布移除渲染 */
+const emit = defineEmits<{
+        (e: 'show-node', record: StructNodeRecord): void
+        (e: 'hide-node', hash: string): void
+}>()
 
 const {
         sidebarWidth,
@@ -223,5 +237,8 @@ const {
         handleToggleRowVisible,
         handleToggleSection,
         handleStartResizeSection
-} = useSidebarView()
+} = useSidebarView(toRef(props, 'selectedNode'), toRef(props, 'canvasNodeIds'), {
+        onShowNode: (record) => emit('show-node', record),
+        onHideNode: (hash) => emit('hide-node', hash)
+})
 </script>

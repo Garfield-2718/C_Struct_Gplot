@@ -18,3 +18,22 @@
 .node-editor .vue-flow__background circle {
         fill: #dcdee0;
 }
+
+/* ========== 空画布提示：无节点时居中显示的引导文案（不遮挡画布交互） ========== */
+.canvas-empty-hint {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        z-index: 5;
+        padding: 12px 24px;
+        border: 1px dashed #cccccc;
+        border-radius: 8px;
+        background-color: rgba(255, 255, 255, 0.75);
+        color: #999999;
+        font-size: 14px;
+        line-height: 1.5;
+        text-align: center;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        user-select: none;
+}
