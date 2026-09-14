@@ -1,11 +1,11 @@
 {
-        "folders": [
-                {
-                        "path": "../../../../.."
-                },
-                {
-                        "path": "../../../../../../C_Struct_Gplot_CLI"
-                }
-        ],
-        "settings": {}
+    "folders": [
+        {
+            "path": "../../../../.."
+        },
+        {
+            "path": "../../../../../../C_Struct_Gplot_CLI"
+        }
+    ],
+    "settings": {}
 }

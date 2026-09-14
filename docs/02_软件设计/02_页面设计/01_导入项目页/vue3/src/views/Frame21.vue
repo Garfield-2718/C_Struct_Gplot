@@ -6,7 +6,7 @@
                 <div class="stroke-3_1"></div>
             </div>
             <p id="3_2" class="Pixso-paragraph-3_2">
-                {{ "选择或拖入要处理的项目文件" }}
+                {{ '选择或拖入要处理的项目文件' }}
             </p>
             <div id="7_1" class="Pixso-vector-7_1"></div>
             <div id="7_2" class="Pixso-vector-7_2"></div>
@@ -60,7 +60,7 @@
 
 .Pixso-paragraph-3_2 {
     font-size: 48px;
-    font-family: "Noto Sans SC-Regular";
+    font-family: 'Noto Sans SC-Regular';
     font-weight: 400;
     text-align: left;
     letter-spacing: 0px;

@@ -1,211 +1,166 @@
 <template>
-        <div
-                class="sidebar-panel"
-                :style="{
-                        '--sidebar-width': `${sidebarWidth}px`,
-                        '--sidebar-handle-right': `${handleRight}px`,
-                        '--element-info-height': `${sectionStates.elementInfo.height}px`,
-                        '--parent-nodes-height': `${sectionStates.parentNodes.height}px`,
-                        '--child-nodes-height': `${sectionStates.childNodes.height}px`
-                }"
-        >
-                <div class="sidebar-content">
-                        <!-- 第一段：元素信息（键值对展示当前选中元素） -->
-                        <section class="sidebar-section">
-                                <header
-                                        class="sidebar-section-header"
-                                        title="点击折叠/展开"
-                                        @click="handleToggleSection(sectionStates.elementInfo)"
+    <div
+        class="sidebar-panel"
+        :style="{
+            '--sidebar-width': `${sidebarWidth}px`,
+            '--sidebar-handle-right': `${handleRight}px`,
+            '--element-info-height': `${sectionStates.elementInfo.height}px`,
+            '--parent-nodes-height': `${sectionStates.parentNodes.height}px`,
+            '--child-nodes-height': `${sectionStates.childNodes.height}px`
+        }"
+    >
+        <div class="sidebar-content">
+            <!-- 第一段：元素信息（键值对展示当前选中元素） -->
+            <section class="sidebar-section">
+                <header
+                    class="sidebar-section-header"
+                    title="点击折叠/展开"
+                    @click="handleToggleSection(sectionStates.elementInfo)"
+                >
+                    <span
+                        class="sidebar-collapse-arrow"
+                        :class="{
+                            'is-collapsed': sectionStates.elementInfo.collapsed
+                        }"
+                    ></span>
+                    <h2 class="sidebar-section-title">元素信息</h2>
+                </header>
+                <Transition name="sidebar-collapse">
+                    <div
+                        v-show="!sectionStates.elementInfo.collapsed"
+                        class="sidebar-section-body sidebar-section-body--element-info"
+                    >
+                        <ul class="sidebar-info-list">
+                            <li
+                                v-for="row in elementInfoRows"
+                                :key="row.key"
+                                class="sidebar-info-row"
+                                :class="{ 'sidebar-info-row--wrap': row.wrap }"
+                            >
+                                <span class="sidebar-info-key">{{ row.key }}</span>
+                                <span class="sidebar-info-value">{{ row.value }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                </Transition>
+                <Transition name="sidebar-collapse">
+                    <div
+                        v-show="!sectionStates.elementInfo.collapsed"
+                        class="sidebar-section-resizer"
+                        title="拖动调节高度"
+                        @mousedown="handleStartResizeSection(sectionStates.elementInfo, $event)"
+                    ></div>
+                </Transition>
+            </section>
+            <!-- 第二段：父节点信息（每个节点占一行，行侧带显隐按键） -->
+            <section class="sidebar-section">
+                <header
+                    class="sidebar-section-header"
+                    title="点击折叠/展开"
+                    @click="handleToggleSection(sectionStates.parentNodes)"
+                >
+                    <span
+                        class="sidebar-collapse-arrow"
+                        :class="{
+                            'is-collapsed': sectionStates.parentNodes.collapsed
+                        }"
+                    ></span>
+                    <h2 class="sidebar-section-title">父节点信息</h2>
+                </header>
+                <Transition name="sidebar-collapse">
+                    <div
+                        v-show="!sectionStates.parentNodes.collapsed"
+                        class="sidebar-section-body sidebar-section-body--parent-nodes"
+                    >
+                        <ul class="sidebar-node-list">
+                            <li
+                                v-for="row in parentNodes"
+                                :key="row.id"
+                                class="sidebar-node-row"
+                                :class="{
+                                    'is-hidden': !row.visible
+                                }"
+                            >
+                                <button
+                                    class="sidebar-visibility-toggle"
+                                    :class="{
+                                        'is-off': !row.visible
+                                    }"
+                                    :title="row.visible ? '隐藏该行' : '显示该行'"
+                                    @click="handleToggleRowVisible(row)"
                                 >
-                                        <span
-                                                class="sidebar-collapse-arrow"
-                                                :class="{
-                                                        'is-collapsed':
-                                                                sectionStates.elementInfo.collapsed
-                                                }"
-                                        ></span>
-                                        <h2 class="sidebar-section-title">元素信息</h2>
-                                </header>
-                                <Transition name="sidebar-collapse">
-                                        <div
-                                                v-show="!sectionStates.elementInfo.collapsed"
-                                                class="sidebar-section-body sidebar-section-body--element-info"
-                                        >
-                                                <ul class="sidebar-info-list">
-                                                        <li
-                                                                v-for="row in elementInfoRows"
-                                                                :key="row.key"
-                                                                class="sidebar-info-row"
-                                                        >
-                                                                <span class="sidebar-info-key">{{
-                                                                        row.key
-                                                                }}</span>
-                                                                <span class="sidebar-info-value">{{
-                                                                        row.value
-                                                                }}</span>
-                                                        </li>
-                                                </ul>
-                                        </div>
-                                </Transition>
-                                <Transition name="sidebar-collapse">
-                                        <div
-                                                v-show="!sectionStates.elementInfo.collapsed"
-                                                class="sidebar-section-resizer"
-                                                title="拖动调节高度"
-                                                @mousedown="
-                                                        handleStartResizeSection(
-                                                                sectionStates.elementInfo,
-                                                                $event
-                                                        )
-                                                "
-                                        ></div>
-                                </Transition>
-                        </section>
-                        <!-- 第二段：父节点信息（每个节点占一行，行侧带显隐按键） -->
-                        <section class="sidebar-section">
-                                <header
-                                        class="sidebar-section-header"
-                                        title="点击折叠/展开"
-                                        @click="handleToggleSection(sectionStates.parentNodes)"
+                                    <span class="sidebar-eye-icon"></span>
+                                </button>
+                                <span class="sidebar-node-label">{{ row.label }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                </Transition>
+                <Transition name="sidebar-collapse">
+                    <div
+                        v-show="!sectionStates.parentNodes.collapsed"
+                        class="sidebar-section-resizer"
+                        title="拖动调节高度"
+                        @mousedown="handleStartResizeSection(sectionStates.parentNodes, $event)"
+                    ></div>
+                </Transition>
+            </section>
+            <!-- 第三段：子节点信息（每个节点占一行，行侧带显隐按键） -->
+            <section class="sidebar-section">
+                <header
+                    class="sidebar-section-header"
+                    title="点击折叠/展开"
+                    @click="handleToggleSection(sectionStates.childNodes)"
+                >
+                    <span
+                        class="sidebar-collapse-arrow"
+                        :class="{
+                            'is-collapsed': sectionStates.childNodes.collapsed
+                        }"
+                    ></span>
+                    <h2 class="sidebar-section-title">子节点信息</h2>
+                </header>
+                <Transition name="sidebar-collapse">
+                    <div
+                        v-show="!sectionStates.childNodes.collapsed"
+                        class="sidebar-section-body sidebar-section-body--child-nodes"
+                    >
+                        <ul class="sidebar-node-list">
+                            <li
+                                v-for="row in childNodes"
+                                :key="row.id"
+                                class="sidebar-node-row"
+                                :class="{
+                                    'is-hidden': !row.visible
+                                }"
+                            >
+                                <button
+                                    class="sidebar-visibility-toggle"
+                                    :class="{
+                                        'is-off': !row.visible
+                                    }"
+                                    :title="row.visible ? '隐藏该行' : '显示该行'"
+                                    @click="handleToggleRowVisible(row)"
                                 >
-                                        <span
-                                                class="sidebar-collapse-arrow"
-                                                :class="{
-                                                        'is-collapsed':
-                                                                sectionStates.parentNodes.collapsed
-                                                }"
-                                        ></span>
-                                        <h2 class="sidebar-section-title">父节点信息</h2>
-                                </header>
-                                <Transition name="sidebar-collapse">
-                                        <div
-                                                v-show="!sectionStates.parentNodes.collapsed"
-                                                class="sidebar-section-body sidebar-section-body--parent-nodes"
-                                        >
-                                                <ul class="sidebar-node-list">
-                                                        <li
-                                                                v-for="row in parentNodes"
-                                                                :key="row.id"
-                                                                class="sidebar-node-row"
-                                                                :class="{
-                                                                        'is-hidden': !row.visible
-                                                                }"
-                                                        >
-                                                                <button
-                                                                        class="sidebar-visibility-toggle"
-                                                                        :class="{
-                                                                                'is-off': !row.visible
-                                                                        }"
-                                                                        :title="
-                                                                                row.visible
-                                                                                        ? '隐藏该行'
-                                                                                        : '显示该行'
-                                                                        "
-                                                                        @click="
-                                                                                handleToggleRowVisible(
-                                                                                        row
-                                                                                )
-                                                                        "
-                                                                >
-                                                                        <span
-                                                                                class="sidebar-eye-icon"
-                                                                        ></span>
-                                                                </button>
-                                                                <span class="sidebar-node-label">{{
-                                                                        row.label
-                                                                }}</span>
-                                                        </li>
-                                                </ul>
-                                        </div>
-                                </Transition>
-                                <Transition name="sidebar-collapse">
-                                        <div
-                                                v-show="!sectionStates.parentNodes.collapsed"
-                                                class="sidebar-section-resizer"
-                                                title="拖动调节高度"
-                                                @mousedown="
-                                                        handleStartResizeSection(
-                                                                sectionStates.parentNodes,
-                                                                $event
-                                                        )
-                                                "
-                                        ></div>
-                                </Transition>
-                        </section>
-                        <!-- 第三段：子节点信息（每个节点占一行，行侧带显隐按键） -->
-                        <section class="sidebar-section">
-                                <header
-                                        class="sidebar-section-header"
-                                        title="点击折叠/展开"
-                                        @click="handleToggleSection(sectionStates.childNodes)"
-                                >
-                                        <span
-                                                class="sidebar-collapse-arrow"
-                                                :class="{
-                                                        'is-collapsed':
-                                                                sectionStates.childNodes.collapsed
-                                                }"
-                                        ></span>
-                                        <h2 class="sidebar-section-title">子节点信息</h2>
-                                </header>
-                                <Transition name="sidebar-collapse">
-                                        <div
-                                                v-show="!sectionStates.childNodes.collapsed"
-                                                class="sidebar-section-body sidebar-section-body--child-nodes"
-                                        >
-                                                <ul class="sidebar-node-list">
-                                                        <li
-                                                                v-for="row in childNodes"
-                                                                :key="row.id"
-                                                                class="sidebar-node-row"
-                                                                :class="{
-                                                                        'is-hidden': !row.visible
-                                                                }"
-                                                        >
-                                                                <button
-                                                                        class="sidebar-visibility-toggle"
-                                                                        :class="{
-                                                                                'is-off': !row.visible
-                                                                        }"
-                                                                        :title="
-                                                                                row.visible
-                                                                                        ? '隐藏该行'
-                                                                                        : '显示该行'
-                                                                        "
-                                                                        @click="
-                                                                                handleToggleRowVisible(
-                                                                                        row
-                                                                                )
-                                                                        "
-                                                                >
-                                                                        <span
-                                                                                class="sidebar-eye-icon"
-                                                                        ></span>
-                                                                </button>
-                                                                <span class="sidebar-node-label">{{
-                                                                        row.label
-                                                                }}</span>
-                                                        </li>
-                                                </ul>
-                                        </div>
-                                </Transition>
-                                <Transition name="sidebar-collapse">
-                                        <div
-                                                v-show="!sectionStates.childNodes.collapsed"
-                                                class="sidebar-section-resizer"
-                                                title="拖动调节高度"
-                                                @mousedown="
-                                                        handleStartResizeSection(
-                                                                sectionStates.childNodes,
-                                                                $event
-                                                        )
-                                                "
-                                        ></div>
-                                </Transition>
-                        </section>
-                </div>
-                <div class="sidebar-resize-handle" @mousedown="handleStartResize"></div>
+                                    <span class="sidebar-eye-icon"></span>
+                                </button>
+                                <span class="sidebar-node-label">{{ row.label }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                </Transition>
+                <Transition name="sidebar-collapse">
+                    <div
+                        v-show="!sectionStates.childNodes.collapsed"
+                        class="sidebar-section-resizer"
+                        title="拖动调节高度"
+                        @mousedown="handleStartResizeSection(sectionStates.childNodes, $event)"
+                    ></div>
+                </Transition>
+            </section>
         </div>
+        <div class="sidebar-resize-handle" @mousedown="handleStartResize"></div>
+    </div>
 </template>
 
 <script lang="ts" setup>
@@ -215,30 +170,30 @@ import type { StructNodeData, StructNodeRecord } from '@/views/canvas_view/useCa
 import './SidebarView.css'
 
 const props = defineProps<{
-        selectedNode: StructNodeData | null
-        /** 画布上已渲染节点的 id（hash）列表：用于同步父/子节点行的眼睛显隐初值 */
-        canvasNodeIds: string[]
+    selectedNode: StructNodeData | null
+    /** 画布上已渲染节点的 id（hash）列表：用于同步父/子节点行的眼睛显隐初值 */
+    canvasNodeIds: string[]
 }>()
 
 /** 向父级 CanvasView 上报显示/隐藏节点：显示交画布渲染新节点，隐藏交画布移除渲染 */
 const emit = defineEmits<{
-        (e: 'show-node', record: StructNodeRecord): void
-        (e: 'hide-node', hash: string): void
+    (e: 'show-node', record: StructNodeRecord): void
+    (e: 'hide-node', hash: string): void
 }>()
 
 const {
-        sidebarWidth,
-        handleRight,
-        elementInfoRows,
-        parentNodes,
-        childNodes,
-        sectionStates,
-        handleStartResize,
-        handleToggleRowVisible,
-        handleToggleSection,
-        handleStartResizeSection
+    sidebarWidth,
+    handleRight,
+    elementInfoRows,
+    parentNodes,
+    childNodes,
+    sectionStates,
+    handleStartResize,
+    handleToggleRowVisible,
+    handleToggleSection,
+    handleStartResizeSection
 } = useSidebarView(toRef(props, 'selectedNode'), toRef(props, 'canvasNodeIds'), {
-        onShowNode: (record) => emit('show-node', record),
-        onHideNode: (hash) => emit('hide-node', hash)
+    onShowNode: (record) => emit('show-node', record),
+    onHideNode: (hash) => emit('hide-node', hash)
 })
 </script>

@@ -7,9 +7,8 @@ import { router } from './router'
 
 createApp(App).use(router).mount('#app')
 
-
 declare global {
-  interface Window {
-    app: any;
-  }
+    interface Window {
+        app: any
+    }
 }

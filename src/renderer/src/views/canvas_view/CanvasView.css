@@ -1,39 +1,41 @@
 /* ========== 画布视口 ========== */
 .canvas-wrapper {
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        position: relative;
-        user-select: none;
+    /* 顶部横贯整条顶边栏 bar 的高度：侧边栏据此下移，位于 bar 之下 */
+    --topbar-height: 44px;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+    user-select: none;
 }
 
 /* ========== Vue Flow 节点编辑器：铺满视口，底色与参考 SVG（#FAFAFA）一致 ========== */
 .node-editor {
-        width: 100%;
-        height: 100%;
-        background-color: #fafafa;
+    width: 100%;
+    height: 100%;
+    background-color: #fafafa;
 }
 
 /* 点阵背景中点的颜色（覆盖 Background 组件 SVG 的 fill 表现属性） */
 .node-editor .vue-flow__background circle {
-        fill: #dcdee0;
+    fill: #dcdee0;
 }
 
 /* ========== 空画布提示：无节点时居中显示的引导文案（不遮挡画布交互） ========== */
 .canvas-empty-hint {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        z-index: 5;
-        padding: 12px 24px;
-        border: 1px dashed #cccccc;
-        border-radius: 8px;
-        background-color: rgba(255, 255, 255, 0.75);
-        color: #999999;
-        font-size: 14px;
-        line-height: 1.5;
-        text-align: center;
-        transform: translate(-50%, -50%);
-        pointer-events: none;
-        user-select: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 5;
+    padding: 12px 24px;
+    border: 1px dashed #cccccc;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.75);
+    color: #999999;
+    font-size: 14px;
+    line-height: 1.5;
+    text-align: center;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    user-select: none;
 }

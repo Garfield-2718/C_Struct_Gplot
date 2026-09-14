@@ -1,4 +1,4 @@
-import './assets/styles/font.css';
+import './assets/styles/font.css'
 import './assets/styles/global.css'
 import { createApp } from 'vue'
 import './styles.css'
@@ -8,7 +8,7 @@ import { router } from './router'
 createApp(App).use(router).mount('#app')
 
 declare global {
-        interface Window {
-                app: any;
-        }
+    interface Window {
+        app: any
+    }
 }

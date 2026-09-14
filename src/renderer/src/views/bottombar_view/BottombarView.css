@@ -1,209 +1,209 @@
 /* ========== 底边栏：贴靠画布底部居中，宽度由内部按键决定；纵向分为顶部三角手柄与按键组 ========== */
 .bottombar-panel {
-        position: absolute;
-        bottom: 16px;
-        left: 50%;
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        padding: 4px;
-        background-color: #fdfdfd;
-        border: 1px solid #e0e0e0;
-        border-radius: 6px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-        transform: translateX(-50%);
-        user-select: none;
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 4px;
+    background-color: #fdfdfd;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    transform: translateX(-50%);
+    user-select: none;
 }
 
 /* ========== 收起/展开手柄：占据底边栏顶部整宽，收起后即为底边栏仅存的可点击区 ========== */
 .bottombar-collapse-handle {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 48px;
-        height: 14px;
-        padding: 0;
-        border: none;
-        border-bottom: 1px solid transparent;
-        border-radius: 4px 4px 0 0;
-        background: transparent;
-        color: #666666;
-        cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    height: 14px;
+    padding: 0;
+    border: none;
+    border-bottom: 1px solid transparent;
+    border-radius: 4px 4px 0 0;
+    background: transparent;
+    color: #666666;
+    cursor: pointer;
 }
 
 /* 展开态下手柄与按键组之间显示分隔线，收起态隐藏避免出现多余横线 */
 .bottombar-panel:not(.is-collapsed) .bottombar-collapse-handle {
-        border-bottom-color: #e0e0e0;
+    border-bottom-color: #e0e0e0;
 }
 
 .bottombar-collapse-handle:hover {
-        background-color: #f0f4f8;
-        color: #333333;
+    background-color: #f0f4f8;
+    color: #333333;
 }
 
 /* 指向三角：纯 CSS 边框绘制，展开态向下（点击收起），收起态旋转 180° 向上（点击展开） */
 .bottombar-collapse-arrow {
-        display: block;
-        width: 0;
-        height: 0;
-        border-top: 5px solid currentColor;
-        border-right: 6px solid transparent;
-        border-left: 6px solid transparent;
-        transition: transform 0.2s ease;
+    display: block;
+    width: 0;
+    height: 0;
+    border-top: 5px solid currentColor;
+    border-right: 6px solid transparent;
+    border-left: 6px solid transparent;
+    transition: transform 0.2s ease;
 }
 
 .bottombar-panel.is-collapsed .bottombar-collapse-arrow {
-        transform: rotate(180deg);
+    transform: rotate(180deg);
 }
 
 /* ========== 按键组外层：网格轨道 1fr → 0fr 实现宽高同步收缩，无需预设尺寸即可过渡 ========== */
 /* visibility 同步关闭，避免收起后被裁剪的按键仍可通过键盘聚焦 */
 .bottombar-tools-wrapper {
-        display: grid;
-        grid-template-columns: 1fr;
-        grid-template-rows: 1fr;
-        overflow: hidden;
-        opacity: 1;
-        visibility: visible;
-        transition:
-                grid-template-columns 0.2s ease,
-                grid-template-rows 0.2s ease,
-                opacity 0.2s ease,
-                visibility 0.2s ease;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+    overflow: hidden;
+    opacity: 1;
+    visibility: visible;
+    transition:
+        grid-template-columns 0.2s ease,
+        grid-template-rows 0.2s ease,
+        opacity 0.2s ease,
+        visibility 0.2s ease;
 }
 
 .bottombar-panel.is-collapsed .bottombar-tools-wrapper {
-        grid-template-columns: 0fr;
-        grid-template-rows: 0fr;
-        opacity: 0;
-        visibility: hidden;
+    grid-template-columns: 0fr;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    visibility: hidden;
 }
 
 /* ========== 按键组：横向排列，按键数量与宽度共同决定底边栏宽度 ========== */
 /* 作为网格项需允许收缩到 0，超出部分由外层裁剪 */
 .bottombar-tools {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        min-width: 0;
-        min-height: 0;
-        overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
 }
 
 /* ========== 工具按键：无边框文本按键，配色与侧边栏保持一致 ========== */
 .bottombar-tool-button {
-        padding: 4px 12px;
-        border: none;
-        border-radius: 4px;
-        background: transparent;
-        font-family: inherit;
-        font-size: 13px;
-        line-height: 20px;
-        color: #666666;
-        cursor: pointer;
+    padding: 4px 12px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 20px;
+    color: #666666;
+    cursor: pointer;
 }
 
 .bottombar-tool-button:hover {
-        background-color: #f0f4f8;
+    background-color: #f0f4f8;
 }
 
 .bottombar-tool-button:active {
-        background-color: #e2ebf5;
+    background-color: #e2ebf5;
 }
 
 /* ========== 添加节点对话框：Teleport 至 body，全屏半透明遮罩 + 居中面板 ========== */
 .add-node-overlay {
-        position: fixed;
-        inset: 0;
-        z-index: 1000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: rgba(0, 0, 0, 0.35);
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.35);
 }
 
 /* 对话框面板：配色与底边栏保持一致，纵向排列标题/输入框/操作区 */
 .add-node-dialog {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        box-sizing: border-box;
-        width: 320px;
-        padding: 20px;
-        background-color: #fdfdfd;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-        user-select: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-sizing: border-box;
+    width: 320px;
+    padding: 20px;
+    background-color: #fdfdfd;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    user-select: none;
 }
 
 .add-node-title {
-        font-size: 15px;
-        font-weight: 600;
-        line-height: 22px;
-        color: #333333;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 22px;
+    color: #333333;
 }
 
 /* 节点内容输入框：底层以字符串保存，聚焦时高亮边框 */
 .add-node-input {
-        box-sizing: border-box;
-        width: 100%;
-        padding: 8px 10px;
-        background-color: #ffffff;
-        border: 1px solid #e0e0e0;
-        border-radius: 4px;
-        font-family: inherit;
-        font-size: 13px;
-        line-height: 20px;
-        color: #333333;
-        outline: none;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 8px 10px;
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 20px;
+    color: #333333;
+    outline: none;
 }
 
 .add-node-input:focus {
-        border-color: #7aa7d9;
-        box-shadow: 0 0 0 2px rgba(122, 167, 217, 0.2);
+    border-color: #7aa7d9;
+    box-shadow: 0 0 0 2px rgba(122, 167, 217, 0.2);
 }
 
 /* 操作区：确认/取消按键右对齐并列排放 */
 .add-node-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 8px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
 }
 
 .add-node-button {
-        padding: 6px 16px;
-        background-color: #ffffff;
-        border: 1px solid #e0e0e0;
-        border-radius: 4px;
-        font-family: inherit;
-        font-size: 13px;
-        line-height: 20px;
-        color: #666666;
-        cursor: pointer;
+    padding: 6px 16px;
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 20px;
+    color: #666666;
+    cursor: pointer;
 }
 
 .add-node-button:hover {
-        background-color: #f0f4f8;
+    background-color: #f0f4f8;
 }
 
 .add-node-button:active {
-        background-color: #e2ebf5;
+    background-color: #e2ebf5;
 }
 
 /* 主操作按键（确认）：柔和蓝强调，与输入框聚焦色呼应 */
 .add-node-button-primary {
-        background-color: #7aa7d9;
-        border-color: #7aa7d9;
-        color: #ffffff;
+    background-color: #7aa7d9;
+    border-color: #7aa7d9;
+    color: #ffffff;
 }
 
 .add-node-button-primary:hover {
-        background-color: #6a97c9;
-        border-color: #6a97c9;
+    background-color: #6a97c9;
+    border-color: #6a97c9;
 }
 
 .add-node-button-primary:active {
-        background-color: #5c88b8;
-        border-color: #5c88b8;
+    background-color: #5c88b8;
+    border-color: #5c88b8;
 }

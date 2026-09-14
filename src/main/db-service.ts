@@ -16,12 +16,12 @@ import { DatabaseSync } from 'node:sqlite'
  * hash=content+salt 的 md5 唯一标识、ui_json=UI 渲染所需 JSON 字符串。
  */
 export interface StructRecord {
-        id: number
-        hash: string
-        data_type_first: string
-        data_type_latter: string
-        source_file: string | null
-        ui_json: string | null
+    id: number
+    hash: string
+    data_type_first: string
+    data_type_latter: string
+    source_file: string | null
+    ui_json: string | null
 }
 
 /**
@@ -30,8 +30,8 @@ export interface StructRecord {
  * 打包后为可执行文件同级的 struct_list_db/，开发态为项目根下的 struct_list_db/。
  */
 export function resolveDefaultDbDir(): string {
-        const appDir = app.isPackaged ? dirname(app.getPath('exe')) : app.getAppPath()
-        return join(appDir, 'struct_list_db')
+    const appDir = app.isPackaged ? dirname(app.getPath('exe')) : app.getAppPath()
+    return join(appDir, 'struct_list_db')
 }
 
 /**
@@ -40,27 +40,25 @@ export function resolveDefaultDbDir(): string {
  * （无法确定目标）时抛出带诊断信息的错误，交由调用方处理。
  */
 export function resolveDbPath(explicitPath?: string): string {
-        const explicit = typeof explicitPath === 'string' ? explicitPath.trim() : ''
-        if (explicit) {
-                if (!existsSync(explicit)) {
-                        throw new Error(`数据库文件不存在: ${explicit}`)
-                }
-                return explicit
+    const explicit = typeof explicitPath === 'string' ? explicitPath.trim() : ''
+    if (explicit) {
+        if (!existsSync(explicit)) {
+            throw new Error(`数据库文件不存在: ${explicit}`)
         }
-        const dir = resolveDefaultDbDir()
-        if (!existsSync(dir)) {
-                throw new Error(`数据库目录不存在: ${dir}（请先在导入页解析项目以生成数据库）`)
-        }
-        const dbFiles = readdirSync(dir).filter((name) => name.endsWith('.db'))
-        if (dbFiles.length === 0) {
-                throw new Error(`数据库目录中没有 .db 文件: ${dir}`)
-        }
-        if (dbFiles.length > 1) {
-                throw new Error(
-                        `数据库目录存在多个 .db 文件，请显式指定 dbPath：${dbFiles.join(', ')}`
-                )
-        }
-        return join(dir, dbFiles[0])
+        return explicit
+    }
+    const dir = resolveDefaultDbDir()
+    if (!existsSync(dir)) {
+        throw new Error(`数据库目录不存在: ${dir}（请先在导入页解析项目以生成数据库）`)
+    }
+    const dbFiles = readdirSync(dir).filter((name) => name.endsWith('.db'))
+    if (dbFiles.length === 0) {
+        throw new Error(`数据库目录中没有 .db 文件: ${dir}`)
+    }
+    if (dbFiles.length > 1) {
+        throw new Error(`数据库目录存在多个 .db 文件，请显式指定 dbPath：${dbFiles.join(', ')}`)
+    }
+    return join(dir, dbFiles[0])
 }
 
 /**
@@ -70,27 +68,27 @@ export function resolveDbPath(explicitPath?: string): string {
  * 以只读方式打开，查询后立即关闭连接；同名结构体可能命中多行，故返回数组。
  */
 export function findStructRecords(
-        dbPath: string,
-        structName: string,
-        dataTypeFirst?: string
+    dbPath: string,
+    structName: string,
+    dataTypeFirst?: string
 ): StructRecord[] {
-        const typeFilter = typeof dataTypeFirst === 'string' ? dataTypeFirst.trim() : ''
-        const columns = 'id, hash, data_type_first, data_type_latter, source_file, ui_json'
-        const byLatter = 'data_type_latter = ? COLLATE BINARY'
-        let sql = `SELECT ${columns} FROM structures WHERE ${byLatter}`
-        if (typeFilter !== '') {
-                sql += ' AND data_type_first = ? COLLATE BINARY'
-        }
+    const typeFilter = typeof dataTypeFirst === 'string' ? dataTypeFirst.trim() : ''
+    const columns = 'id, hash, data_type_first, data_type_latter, source_file, ui_json'
+    const byLatter = 'data_type_latter = ? COLLATE BINARY'
+    let sql = `SELECT ${columns} FROM structures WHERE ${byLatter}`
+    if (typeFilter !== '') {
+        sql += ' AND data_type_first = ? COLLATE BINARY'
+    }
 
-        // readOnly 打开，避免误写 CLI 生成的数据库
-        const db = new DatabaseSync(dbPath, { readOnly: true })
-        try {
-                const params = typeFilter !== '' ? [structName, typeFilter] : [structName]
-                const rows = db.prepare(sql).all(...params)
-                return rows as unknown as StructRecord[]
-        } finally {
-                db.close()
-        }
+    // readOnly 打开，避免误写 CLI 生成的数据库
+    const db = new DatabaseSync(dbPath, { readOnly: true })
+    try {
+        const params = typeFilter !== '' ? [structName, typeFilter] : [structName]
+        const rows = db.prepare(sql).all(...params)
+        return rows as unknown as StructRecord[]
+    } finally {
+        db.close()
+    }
 }
 
 /**
@@ -100,15 +98,15 @@ export function findStructRecords(
  * 采用 COLLATE BINARY 区分大小写精确匹配；以只读方式打开，查询后立即关闭连接。
  */
 export function findStructRecordsByHash(dbPath: string, hash: string): StructRecord[] {
-        const columns = 'id, hash, data_type_first, data_type_latter, source_file, ui_json'
-        const sql = `SELECT ${columns} FROM structures WHERE hash = ? COLLATE BINARY`
-        const db = new DatabaseSync(dbPath, { readOnly: true })
-        try {
-                const rows = db.prepare(sql).all(hash)
-                return rows as unknown as StructRecord[]
-        } finally {
-                db.close()
-        }
+    const columns = 'id, hash, data_type_first, data_type_latter, source_file, ui_json'
+    const sql = `SELECT ${columns} FROM structures WHERE hash = ? COLLATE BINARY`
+    const db = new DatabaseSync(dbPath, { readOnly: true })
+    try {
+        const rows = db.prepare(sql).all(hash)
+        return rows as unknown as StructRecord[]
+    } finally {
+        db.close()
+    }
 }
 
 /**
@@ -117,13 +115,13 @@ export function findStructRecordsByHash(dbPath: string, hash: string): StructRec
  * 以只读方式打开，查询后立即关闭连接；relations 表不存在时抛出异常，由调用方处理。
  */
 export function findParentHashes(dbPath: string, childHash: string): string[] {
-        const db = new DatabaseSync(dbPath, { readOnly: true })
-        try {
-                const rows = db.prepare('SELECT parent FROM relations WHERE child = ?').all(childHash)
-                return (rows as Array<{ parent: string }>).map((r) => r.parent)
-        } finally {
-                db.close()
-        }
+    const db = new DatabaseSync(dbPath, { readOnly: true })
+    try {
+        const rows = db.prepare('SELECT parent FROM relations WHERE child = ?').all(childHash)
+        return (rows as Array<{ parent: string }>).map((r) => r.parent)
+    } finally {
+        db.close()
+    }
 }
 
 /**
@@ -131,11 +129,33 @@ export function findParentHashes(dbPath: string, childHash: string): string[] {
  * 以只读方式打开，查询后立即关闭连接；relations 表不存在时抛出异常，由调用方处理。
  */
 export function findChildHashes(dbPath: string, parentHash: string): string[] {
-        const db = new DatabaseSync(dbPath, { readOnly: true })
-        try {
-                const rows = db.prepare('SELECT child FROM relations WHERE parent = ?').all(parentHash)
-                return (rows as Array<{ child: string }>).map((r) => r.child)
-        } finally {
-                db.close()
-        }
+    const db = new DatabaseSync(dbPath, { readOnly: true })
+    try {
+        const rows = db.prepare('SELECT child FROM relations WHERE parent = ?').all(parentHash)
+        return (rows as Array<{ child: string }>).map((r) => r.child)
+    } finally {
+        db.close()
+    }
+}
+
+/**
+ * 在指定 SQLite 数据库中按 hash 批量查找结构体的类型与名称（不含 ui_json，轻量查询）。
+ * 返回数组，每条含 hash、data_type_first、data_type_latter；未命中的 hash 不在结果中。
+ * 供红黑树插入节点时同步缓存其父/子节点的显示名称，避免侧边栏回退显示原始 hash。
+ * 以只读方式打开，查询后立即关闭连接。
+ */
+export function findStructNamesByHashes(
+    dbPath: string,
+    hashes: string[]
+): Array<{ hash: string; data_type_first: string; data_type_latter: string }> {
+    if (hashes.length === 0) return []
+    const db = new DatabaseSync(dbPath, { readOnly: true })
+    try {
+        const placeholders = hashes.map(() => '?').join(',')
+        const sql = `SELECT hash, data_type_first, data_type_latter FROM structures WHERE hash IN (${placeholders})`
+        const rows = db.prepare(sql).all(...hashes)
+        return rows as Array<{ hash: string; data_type_first: string; data_type_latter: string }>
+    } finally {
+        db.close()
+    }
 }

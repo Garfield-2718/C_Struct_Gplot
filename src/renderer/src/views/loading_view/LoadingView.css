@@ -1,68 +1,74 @@
 /* ========== 画布自适应缩放 ========== */
 .scale-wrapper {
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .loading-page-canvas {
-        width: 1920px;
-        height: 1080px;
-        overflow: hidden;
-        background-color: rgba(255, 255, 255, 1);
-        mix-blend-mode: normal;
-        transform-origin: center center;
-        position: relative;
-        flex-shrink: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    background-color: rgba(255, 255, 255, 1);
+    mix-blend-mode: normal;
+    transform-origin: center center;
+    position: relative;
+    flex-shrink: 0;
 }
 
 /* ========== 加载动画 Spinner（CSS 替代 SVG） ========== */
 .loading-spinner {
-        width: 366px;
-        height: 366px;
-        position: absolute;
-        left: 777px;
-        top: 273px;
-        border-radius: 50%;
-        background: conic-gradient(from 174deg at 50% 50%, #000 0%, transparent 25.5%, #000 100%);
-        -webkit-mask: radial-gradient(circle, transparent 153px, #fff 154px, #fff 182px, transparent 183px);
-        mask: radial-gradient(circle, transparent 153px, #fff 154px, #fff 182px, transparent 183px);
-        animation: loading-spin 2.0s linear infinite;
+    width: 366px;
+    height: 366px;
+    position: absolute;
+    left: 777px;
+    top: 273px;
+    border-radius: 50%;
+    background: conic-gradient(from 174deg at 50% 50%, #000 0%, transparent 25.5%, #000 100%);
+    -webkit-mask: radial-gradient(
+        circle,
+        transparent 153px,
+        #fff 154px,
+        #fff 182px,
+        transparent 183px
+    );
+    mask: radial-gradient(circle, transparent 153px, #fff 154px, #fff 182px, transparent 183px);
+    animation: loading-spin 2s linear infinite;
 }
 
 @keyframes loading-spin {
-        from {
-                transform: rotate(0deg);
-        }
-        to {
-                transform: rotate(360deg);
-        }
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* ========== 加载文字 ========== */
 .loading-text {
-        font-size: 72px;
-        font-family: 'Noto Sans SC';
-        font-weight: 400;
-        text-align: left;
-        letter-spacing: 0px;
-        text-decoration: none;
-        color: rgba(0, 0, 0, 1);
-        position: absolute;
-        left: 834px;
-        top: 706px;
-        white-space: pre;
-        mix-blend-mode: normal;
+    font-size: 72px;
+    font-family: 'Noto Sans SC';
+    font-weight: 400;
+    text-align: left;
+    letter-spacing: 0px;
+    text-decoration: none;
+    color: rgba(0, 0, 0, 1);
+    position: absolute;
+    left: 834px;
+    top: 706px;
+    white-space: pre;
+    mix-blend-mode: normal;
 }
 
 /* ========== 调试按钮定位容器 ========== */
 .debug-button-position {
-        position: absolute;
-        left: 50%;
-        top: 960px;
-        width: 200px;
-        transform: translateX(-50%);
+    position: absolute;
+    left: 50%;
+    top: 960px;
+    width: 200px;
+    transform: translateX(-50%);
 }

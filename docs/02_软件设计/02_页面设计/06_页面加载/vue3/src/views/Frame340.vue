@@ -2,7 +2,7 @@
     <div class="scroll-container">
         <div id="3_40" class="loading-frame-3_40 pixso-relative-no-shrink">
             <p id="3_48" class="loading-paragraph-3_48 pixso-auto-size">
-                {{ "加载中" }}
+                {{ '加载中' }}
             </p>
             <div id="10_100" class="loading-vector-10_100"></div>
         </div>
@@ -26,7 +26,7 @@
 
 .loading-paragraph-3_48 {
     font-size: 72px;
-    font-family: "Noto Sans SC-Regular";
+    font-family: 'Noto Sans SC-Regular';
     font-weight: 400;
     text-align: left;
     letter-spacing: 0px;

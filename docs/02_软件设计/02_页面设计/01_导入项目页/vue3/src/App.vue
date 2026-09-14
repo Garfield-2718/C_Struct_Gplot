@@ -1,9 +1,8 @@
-
 <template>
-  <router-view></router-view>
+    <router-view></router-view>
 </template>
 <script lang="ts" setup>
-import { getCurrentInstance } from 'vue';
+import { getCurrentInstance } from 'vue'
 
-window.app = getCurrentInstance();
+window.app = getCurrentInstance()
 </script>

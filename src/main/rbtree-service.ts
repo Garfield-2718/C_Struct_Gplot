@@ -10,18 +10,18 @@
 
 // ─── 红黑树节点颜色 ───────────────────────────────────────────────────────────
 const enum Color {
-        RED = 0,
-        BLACK = 1
+    RED = 0,
+    BLACK = 1
 }
 
 // ─── 红黑树节点 ───────────────────────────────────────────────────────────────
 interface RBNode<K, V> {
-        key: K
-        value: V
-        color: Color
-        left: RBNode<K, V> | null
-        right: RBNode<K, V> | null
-        parent: RBNode<K, V> | null
+    key: K
+    value: V
+    color: Color
+    left: RBNode<K, V> | null
+    right: RBNode<K, V> | null
+    parent: RBNode<K, V> | null
 }
 
 // ─── 泛型红黑树实现 ───────────────────────────────────────────────────────────
@@ -30,359 +30,359 @@ interface RBNode<K, V> {
  * 对外暴露 insert / delete / update / find / findAll / inorder / size 等方法。
  */
 export class RBTree<K, V> {
-        private root: RBNode<K, V> | null = null
-        private _size = 0
-        private compare: (a: K, b: K) => number
+    private root: RBNode<K, V> | null = null
+    private _size = 0
+    private compare: (a: K, b: K) => number
 
-        constructor(compare: (a: K, b: K) => number) {
-                this.compare = compare
+    constructor(compare: (a: K, b: K) => number) {
+        this.compare = compare
+    }
+
+    /** 当前树中节点数量 */
+    get size(): number {
+        return this._size
+    }
+
+    // ─── 增 ─────────────────────────────────────────────────────────────────
+    /** 插入键值对；若键已存在则覆盖旧值并返回旧值，否则返回 null */
+    insert(key: K, value: V): V | null {
+        const existing = this.findNode(key)
+        if (existing) {
+            const old = existing.value
+            existing.value = value
+            return old
         }
+        this.bstInsert(key, value)
+        return null
+    }
 
-        /** 当前树中节点数量 */
-        get size(): number {
-                return this._size
+    // ─── 删 ─────────────────────────────────────────────────────────────────
+    /** 删除指定键的节点；返回被删除的值，未找到返回 null */
+    delete(key: K): V | null {
+        const node = this.findNode(key)
+        if (!node) return null
+        const value = node.value
+        this.rbDelete(node)
+        return value
+    }
+
+    // ─── 改 ─────────────────────────────────────────────────────────────────
+    /** 更新指定键的值；键不存在则返回 false */
+    update(key: K, value: V): boolean {
+        const node = this.findNode(key)
+        if (!node) return false
+        node.value = value
+        return true
+    }
+
+    // ─── 查 ─────────────────────────────────────────────────────────────────
+    /** 查找指定键的值；未找到返回 undefined */
+    find(key: K): V | undefined {
+        const node = this.findNode(key)
+        return node ? node.value : undefined
+    }
+
+    /** 判断指定键是否存在 */
+    has(key: K): boolean {
+        return this.findNode(key) !== null
+    }
+
+    /** 中序遍历，返回按 key 升序排列的所有值 */
+    inorder(): V[] {
+        const result: V[] = []
+        const walk = (node: RBNode<K, V> | null): void => {
+            if (!node) return
+            walk(node.left)
+            result.push(node.value)
+            walk(node.right)
         }
+        walk(this.root)
+        return result
+    }
 
-        // ─── 增 ─────────────────────────────────────────────────────────────────
-        /** 插入键值对；若键已存在则覆盖旧值并返回旧值，否则返回 null */
-        insert(key: K, value: V): V | null {
-                const existing = this.findNode(key)
-                if (existing) {
-                        const old = existing.value
-                        existing.value = value
-                        return old
-                }
-                this.bstInsert(key, value)
-                return null
+    /** 中序遍历，返回按 key 升序排列的所有 [key, value] 对 */
+    entries(): Array<[K, V]> {
+        const result: Array<[K, V]> = []
+        const walk = (node: RBNode<K, V> | null): void => {
+            if (!node) return
+            walk(node.left)
+            result.push([node.key, node.value])
+            walk(node.right)
         }
+        walk(this.root)
+        return result
+    }
 
-        // ─── 删 ─────────────────────────────────────────────────────────────────
-        /** 删除指定键的节点；返回被删除的值，未找到返回 null */
-        delete(key: K): V | null {
-                const node = this.findNode(key)
-                if (!node) return null
-                const value = node.value
-                this.rbDelete(node)
-                return value
+    /** 按值谓词过滤，返回所有匹配的值 */
+    findAll(predicate: (value: V) => boolean): V[] {
+        const result: V[] = []
+        const walk = (node: RBNode<K, V> | null): void => {
+            if (!node) return
+            walk(node.left)
+            if (predicate(node.value)) result.push(node.value)
+            walk(node.right)
         }
+        walk(this.root)
+        return result
+    }
 
-        // ─── 改 ─────────────────────────────────────────────────────────────────
-        /** 更新指定键的值；键不存在则返回 false */
-        update(key: K, value: V): boolean {
-                const node = this.findNode(key)
-                if (!node) return false
-                node.value = value
-                return true
+    /** 清空整棵树 */
+    clear(): void {
+        this.root = null
+        this._size = 0
+    }
+
+    // ─── 内部：BST 查找 ────────────────────────────────────────────────────
+    private findNode(key: K): RBNode<K, V> | null {
+        let current = this.root
+        while (current) {
+            const cmp = this.compare(key, current.key)
+            if (cmp === 0) return current
+            current = cmp < 0 ? current.left : current.right
         }
+        return null
+    }
 
-        // ─── 查 ─────────────────────────────────────────────────────────────────
-        /** 查找指定键的值；未找到返回 undefined */
-        find(key: K): V | undefined {
-                const node = this.findNode(key)
-                return node ? node.value : undefined
+    // ─── 内部：BST 插入 + 红黑修复 ─────────────────────────────────────────
+    private bstInsert(key: K, value: V): void {
+        const newNode: RBNode<K, V> = {
+            key,
+            value,
+            color: Color.RED,
+            left: null,
+            right: null,
+            parent: null
         }
-
-        /** 判断指定键是否存在 */
-        has(key: K): boolean {
-                return this.findNode(key) !== null
+        if (!this.root) {
+            this.root = newNode
+            newNode.color = Color.BLACK
+            this._size++
+            return
         }
-
-        /** 中序遍历，返回按 key 升序排列的所有值 */
-        inorder(): V[] {
-                const result: V[] = []
-                const walk = (node: RBNode<K, V> | null): void => {
-                        if (!node) return
-                        walk(node.left)
-                        result.push(node.value)
-                        walk(node.right)
-                }
-                walk(this.root)
-                return result
+        let current: RBNode<K, V> | null = this.root
+        let parent: RBNode<K, V> | null = null
+        while (current) {
+            parent = current
+            const cmp = this.compare(key, current.key)
+            current = cmp < 0 ? current.left : current.right
         }
-
-        /** 中序遍历，返回按 key 升序排列的所有 [key, value] 对 */
-        entries(): Array<[K, V]> {
-                const result: Array<[K, V]> = []
-                const walk = (node: RBNode<K, V> | null): void => {
-                        if (!node) return
-                        walk(node.left)
-                        result.push([node.key, node.value])
-                        walk(node.right)
-                }
-                walk(this.root)
-                return result
+        newNode.parent = parent
+        if (this.compare(key, parent!.key) < 0) {
+            parent!.left = newNode
+        } else {
+            parent!.right = newNode
         }
+        this._size++
+        this.insertFixup(newNode)
+    }
 
-        /** 按值谓词过滤，返回所有匹配的值 */
-        findAll(predicate: (value: V) => boolean): V[] {
-                const result: V[] = []
-                const walk = (node: RBNode<K, V> | null): void => {
-                        if (!node) return
-                        walk(node.left)
-                        if (predicate(node.value)) result.push(node.value)
-                        walk(node.right)
-                }
-                walk(this.root)
-                return result
-        }
-
-        /** 清空整棵树 */
-        clear(): void {
-                this.root = null
-                this._size = 0
-        }
-
-        // ─── 内部：BST 查找 ────────────────────────────────────────────────────
-        private findNode(key: K): RBNode<K, V> | null {
-                let current = this.root
-                while (current) {
-                        const cmp = this.compare(key, current.key)
-                        if (cmp === 0) return current
-                        current = cmp < 0 ? current.left : current.right
-                }
-                return null
-        }
-
-        // ─── 内部：BST 插入 + 红黑修复 ─────────────────────────────────────────
-        private bstInsert(key: K, value: V): void {
-                const newNode: RBNode<K, V> = {
-                        key,
-                        value,
-                        color: Color.RED,
-                        left: null,
-                        right: null,
-                        parent: null
-                }
-                if (!this.root) {
-                        this.root = newNode
-                        newNode.color = Color.BLACK
-                        this._size++
-                        return
-                }
-                let current: RBNode<K, V> | null = this.root
-                let parent: RBNode<K, V> | null = null
-                while (current) {
-                        parent = current
-                        const cmp = this.compare(key, current.key)
-                        current = cmp < 0 ? current.left : current.right
-                }
-                newNode.parent = parent
-                if (this.compare(key, parent!.key) < 0) {
-                        parent!.left = newNode
+    private insertFixup(node: RBNode<K, V>): void {
+        let z: RBNode<K, V> | null = node
+        while (z && z.parent && z.parent.color === Color.RED) {
+            const zp = z.parent
+            const zpp = zp.parent
+            if (!zpp) break
+            if (zp === zpp.left) {
+                const uncle = zpp.right
+                if (uncle && uncle.color === Color.RED) {
+                    zp.color = Color.BLACK
+                    uncle.color = Color.BLACK
+                    zpp.color = Color.RED
+                    z = zpp
                 } else {
-                        parent!.right = newNode
+                    if (z === zp.right) {
+                        z = zp
+                        this.rotateLeft(z!)
+                    }
+                    z!.parent!.color = Color.BLACK
+                    z!.parent!.parent!.color = Color.RED
+                    this.rotateRight(z!.parent!.parent!)
                 }
-                this._size++
-                this.insertFixup(newNode)
-        }
-
-        private insertFixup(node: RBNode<K, V>): void {
-                let z: RBNode<K, V> | null = node
-                while (z && z.parent && z.parent.color === Color.RED) {
-                        const zp = z.parent
-                        const zpp = zp.parent
-                        if (!zpp) break
-                        if (zp === zpp.left) {
-                                const uncle = zpp.right
-                                if (uncle && uncle.color === Color.RED) {
-                                        zp.color = Color.BLACK
-                                        uncle.color = Color.BLACK
-                                        zpp.color = Color.RED
-                                        z = zpp
-                                } else {
-                                        if (z === zp.right) {
-                                                z = zp
-                                                this.rotateLeft(z!)
-                                        }
-                                        z!.parent!.color = Color.BLACK
-                                        z!.parent!.parent!.color = Color.RED
-                                        this.rotateRight(z!.parent!.parent!)
-                                }
-                        } else {
-                                const uncle = zpp.left
-                                if (uncle && uncle.color === Color.RED) {
-                                        zp.color = Color.BLACK
-                                        uncle.color = Color.BLACK
-                                        zpp.color = Color.RED
-                                        z = zpp
-                                } else {
-                                        if (z === zp.left) {
-                                                z = zp
-                                                this.rotateRight(z!)
-                                        }
-                                        z!.parent!.color = Color.BLACK
-                                        z!.parent!.parent!.color = Color.RED
-                                        this.rotateLeft(z!.parent!.parent!)
-                                }
-                        }
-                }
-                this.root!.color = Color.BLACK
-        }
-
-        // ─── 内部：红黑树删除 ──────────────────────────────────────────────────
-        private rbDelete(node: RBNode<K, V>): void {
-                this._size--
-                // 寻找实际被移除或替换的节点
-                let y: RBNode<K, V> = node
-                let yOriginalColor = y.color
-                let x: RBNode<K, V> | null
-                let xParent: RBNode<K, V> | null
-
-                if (!node.left) {
-                        x = node.right
-                        xParent = node.parent
-                        this.transplant(node, node.right)
-                } else if (!node.right) {
-                        x = node.left
-                        xParent = node.parent
-                        this.transplant(node, node.left)
+            } else {
+                const uncle = zpp.left
+                if (uncle && uncle.color === Color.RED) {
+                    zp.color = Color.BLACK
+                    uncle.color = Color.BLACK
+                    zpp.color = Color.RED
+                    z = zpp
                 } else {
-                        // 找右子树最小节点（中序后继）
-                        y = this.minimum(node.right)
-                        yOriginalColor = y.color
-                        x = y.right
-                        if (y.parent === node) {
-                                xParent = y
-                        } else {
-                                xParent = y.parent
-                                this.transplant(y, y.right)
-                                y.right = node.right
-                                y.right.parent = y
-                        }
-                        this.transplant(node, y)
-                        y.left = node.left
-                        y.left.parent = y
-                        y.color = node.color
+                    if (z === zp.left) {
+                        z = zp
+                        this.rotateRight(z!)
+                    }
+                    z!.parent!.color = Color.BLACK
+                    z!.parent!.parent!.color = Color.RED
+                    this.rotateLeft(z!.parent!.parent!)
                 }
-                if (yOriginalColor === Color.BLACK && (x || xParent)) {
-                        this.deleteFixup(x, xParent)
-                }
+            }
         }
+        this.root!.color = Color.BLACK
+    }
 
-        private deleteFixup(x: RBNode<K, V> | null, xParent: RBNode<K, V> | null): void {
-                while (x !== this.root && (!x || x.color === Color.BLACK)) {
-                        const parent = x ? x.parent : xParent
-                        if (!parent) break
-                        if (x === parent.left) {
-                                let w = parent.right
-                                if (w && w.color === Color.RED) {
-                                        w.color = Color.BLACK
-                                        parent.color = Color.RED
-                                        this.rotateLeft(parent)
-                                        w = parent.right
-                                }
-                                if (
-                                        w &&
-                                        (!w.left || w.left.color === Color.BLACK) &&
-                                        (!w.right || w.right.color === Color.BLACK)
-                                ) {
-                                        w.color = Color.RED
-                                        x = parent
-                                        xParent = parent.parent
-                                } else {
-                                        if (w && (!w.right || w.right.color === Color.BLACK)) {
-                                                if (w.left) w.left.color = Color.BLACK
-                                                w.color = Color.RED
-                                                this.rotateRight(w)
-                                                w = parent.right
-                                        }
-                                        if (w) {
-                                                w.color = parent.color
-                                                parent.color = Color.BLACK
-                                                if (w.right) w.right.color = Color.BLACK
-                                        }
-                                        this.rotateLeft(parent)
-                                        x = this.root
-                                        xParent = null
-                                }
-                        } else {
-                                let w = parent.left
-                                if (w && w.color === Color.RED) {
-                                        w.color = Color.BLACK
-                                        parent.color = Color.RED
-                                        this.rotateRight(parent)
-                                        w = parent.left
-                                }
-                                if (
-                                        w &&
-                                        (!w.right || w.right.color === Color.BLACK) &&
-                                        (!w.left || w.left.color === Color.BLACK)
-                                ) {
-                                        w.color = Color.RED
-                                        x = parent
-                                        xParent = parent.parent
-                                } else {
-                                        if (w && (!w.left || w.left.color === Color.BLACK)) {
-                                                if (w.right) w.right.color = Color.BLACK
-                                                w.color = Color.RED
-                                                this.rotateLeft(w)
-                                                w = parent.left
-                                        }
-                                        if (w) {
-                                                w.color = parent.color
-                                                parent.color = Color.BLACK
-                                                if (w.left) w.left.color = Color.BLACK
-                                        }
-                                        this.rotateRight(parent)
-                                        x = this.root
-                                        xParent = null
-                                }
-                        }
-                }
-                if (x) x.color = Color.BLACK
+    // ─── 内部：红黑树删除 ──────────────────────────────────────────────────
+    private rbDelete(node: RBNode<K, V>): void {
+        this._size--
+        // 寻找实际被移除或替换的节点
+        let y: RBNode<K, V> = node
+        let yOriginalColor = y.color
+        let x: RBNode<K, V> | null
+        let xParent: RBNode<K, V> | null
+
+        if (!node.left) {
+            x = node.right
+            xParent = node.parent
+            this.transplant(node, node.right)
+        } else if (!node.right) {
+            x = node.left
+            xParent = node.parent
+            this.transplant(node, node.left)
+        } else {
+            // 找右子树最小节点（中序后继）
+            y = this.minimum(node.right)
+            yOriginalColor = y.color
+            x = y.right
+            if (y.parent === node) {
+                xParent = y
+            } else {
+                xParent = y.parent
+                this.transplant(y, y.right)
+                y.right = node.right
+                y.right.parent = y
+            }
+            this.transplant(node, y)
+            y.left = node.left
+            y.left.parent = y
+            y.color = node.color
         }
+        if (yOriginalColor === Color.BLACK && (x || xParent)) {
+            this.deleteFixup(x, xParent)
+        }
+    }
 
-        private transplant(u: RBNode<K, V>, v: RBNode<K, V> | null): void {
-                if (!u.parent) {
-                        this.root = v
-                } else if (u === u.parent.left) {
-                        u.parent.left = v
+    private deleteFixup(x: RBNode<K, V> | null, xParent: RBNode<K, V> | null): void {
+        while (x !== this.root && (!x || x.color === Color.BLACK)) {
+            const parent = x ? x.parent : xParent
+            if (!parent) break
+            if (x === parent.left) {
+                let w = parent.right
+                if (w && w.color === Color.RED) {
+                    w.color = Color.BLACK
+                    parent.color = Color.RED
+                    this.rotateLeft(parent)
+                    w = parent.right
+                }
+                if (
+                    w &&
+                    (!w.left || w.left.color === Color.BLACK) &&
+                    (!w.right || w.right.color === Color.BLACK)
+                ) {
+                    w.color = Color.RED
+                    x = parent
+                    xParent = parent.parent
                 } else {
-                        u.parent.right = v
+                    if (w && (!w.right || w.right.color === Color.BLACK)) {
+                        if (w.left) w.left.color = Color.BLACK
+                        w.color = Color.RED
+                        this.rotateRight(w)
+                        w = parent.right
+                    }
+                    if (w) {
+                        w.color = parent.color
+                        parent.color = Color.BLACK
+                        if (w.right) w.right.color = Color.BLACK
+                    }
+                    this.rotateLeft(parent)
+                    x = this.root
+                    xParent = null
                 }
-                if (v) v.parent = u.parent
-        }
-
-        private minimum(node: RBNode<K, V>): RBNode<K, V> {
-                let current = node
-                while (current.left) current = current.left
-                return current
-        }
-
-        // ─── 内部：旋转 ────────────────────────────────────────────────────────
-        private rotateLeft(x: RBNode<K, V>): void {
-                const y = x.right
-                if (!y) return
-                x.right = y.left
-                if (y.left) y.left.parent = x
-                y.parent = x.parent
-                if (!x.parent) {
-                        this.root = y
-                } else if (x === x.parent.left) {
-                        x.parent.left = y
+            } else {
+                let w = parent.left
+                if (w && w.color === Color.RED) {
+                    w.color = Color.BLACK
+                    parent.color = Color.RED
+                    this.rotateRight(parent)
+                    w = parent.left
+                }
+                if (
+                    w &&
+                    (!w.right || w.right.color === Color.BLACK) &&
+                    (!w.left || w.left.color === Color.BLACK)
+                ) {
+                    w.color = Color.RED
+                    x = parent
+                    xParent = parent.parent
                 } else {
-                        x.parent.right = y
+                    if (w && (!w.left || w.left.color === Color.BLACK)) {
+                        if (w.right) w.right.color = Color.BLACK
+                        w.color = Color.RED
+                        this.rotateLeft(w)
+                        w = parent.left
+                    }
+                    if (w) {
+                        w.color = parent.color
+                        parent.color = Color.BLACK
+                        if (w.left) w.left.color = Color.BLACK
+                    }
+                    this.rotateRight(parent)
+                    x = this.root
+                    xParent = null
                 }
-                y.left = x
-                x.parent = y
+            }
         }
+        if (x) x.color = Color.BLACK
+    }
 
-        private rotateRight(x: RBNode<K, V>): void {
-                const y = x.left
-                if (!y) return
-                x.left = y.right
-                if (y.right) y.right.parent = x
-                y.parent = x.parent
-                if (!x.parent) {
-                        this.root = y
-                } else if (x === x.parent.right) {
-                        x.parent.right = y
-                } else {
-                        x.parent.left = y
-                }
-                y.right = x
-                x.parent = y
+    private transplant(u: RBNode<K, V>, v: RBNode<K, V> | null): void {
+        if (!u.parent) {
+            this.root = v
+        } else if (u === u.parent.left) {
+            u.parent.left = v
+        } else {
+            u.parent.right = v
         }
+        if (v) v.parent = u.parent
+    }
+
+    private minimum(node: RBNode<K, V>): RBNode<K, V> {
+        let current = node
+        while (current.left) current = current.left
+        return current
+    }
+
+    // ─── 内部：旋转 ────────────────────────────────────────────────────────
+    private rotateLeft(x: RBNode<K, V>): void {
+        const y = x.right
+        if (!y) return
+        x.right = y.left
+        if (y.left) y.left.parent = x
+        y.parent = x.parent
+        if (!x.parent) {
+            this.root = y
+        } else if (x === x.parent.left) {
+            x.parent.left = y
+        } else {
+            x.parent.right = y
+        }
+        y.left = x
+        x.parent = y
+    }
+
+    private rotateRight(x: RBNode<K, V>): void {
+        const y = x.left
+        if (!y) return
+        x.left = y.right
+        if (y.right) y.right.parent = x
+        y.parent = x.parent
+        if (!x.parent) {
+            this.root = y
+        } else if (x === x.parent.right) {
+            x.parent.right = y
+        } else {
+            x.parent.left = y
+        }
+        y.right = x
+        x.parent = y
+    }
 }
 
 // ─── StructRecord 类型导入 ────────────────────────────────────────────────────
@@ -390,33 +390,53 @@ import type { StructRecord } from './db-service'
 
 // ─── 红黑树实例：以 hash 为键存储 StructRecord ───────────────────────────────
 const structRecordTree = new RBTree<string, StructRecord>((a, b) => {
-        if (a < b) return -1
-        if (a > b) return 1
-        return 0
+    if (a < b) return -1
+    if (a > b) return 1
+    return 0
 })
+
+// ─── hash → 节点显示名称缓存 ─────────────────────────────────────────────────
+/**
+ * 与红黑树并行维护的标签缓存：hash → 可读显示名称（如 'struct mesh_core (a1b2c3)'）。
+ * 红黑树插入节点时同步写入该节点自身的标签；此外 ipc-handlers 在转化写树时
+ * 会批量查询父/子节点的名称并预填入缓存，使侧边栏在节点尚未加载到红黑树时
+ * 仍能显示可读名称而非原始 hash。
+ */
+const hashLabelMap = new Map<string, string>()
+
+/** 构建节点显示标签：'kind name (hashShort)' 格式，与画布卡片标题一致 */
+function buildNodeLabel(kind: string, name: string, hash: string): string {
+    const hashShort = hash.slice(0, 6)
+    return name ? `${kind} ${name} (${hashShort})` : `${kind} (${hashShort})`
+}
 
 // ─── 对外导出的函数式 CRUD 接口 ──────────────────────────────────────────────
 
 /**
  * 【增】将一条或多条 StructRecord 插入红黑树（以 hash 为键）。
  * 若 hash 已存在则覆盖旧值。返回实际新增的条数（不含覆盖）。
+ * 插入时同步将节点自身的显示名称写入 hashLabelMap 缓存。
  */
 export function treeInsert(records: StructRecord | StructRecord[]): number {
-        const list = Array.isArray(records) ? records : [records]
-        let inserted = 0
-        for (const record of list) {
-                const existed = structRecordTree.has(record.hash)
-                structRecordTree.insert(record.hash, record)
-                if (!existed) inserted++
-        }
-        return inserted
+    const list = Array.isArray(records) ? records : [records]
+    let inserted = 0
+    for (const record of list) {
+        const existed = structRecordTree.has(record.hash)
+        structRecordTree.insert(record.hash, record)
+        // 同步缓存节点显示标签，供 query-node-labels 在 ui_json 不可用时回退
+        const kind = record.data_type_first || 'struct'
+        const name = record.data_type_latter || ''
+        hashLabelMap.set(record.hash, buildNodeLabel(kind, name, record.hash))
+        if (!existed) inserted++
+    }
+    return inserted
 }
 
 /**
  * 【删】按 hash 从红黑树中移除记录；返回被移除的 StructRecord 或 null。
  */
 export function treeDelete(hash: string): StructRecord | null {
-        return structRecordTree.delete(hash)
+    return structRecordTree.delete(hash)
 }
 
 /**
@@ -424,52 +444,80 @@ export function treeDelete(hash: string): StructRecord | null {
  * 键不存在时返回 false；成功时返回 true。
  */
 export function treeUpdate(hash: string, partial: Partial<StructRecord>): boolean {
-        const existing = structRecordTree.find(hash)
-        if (!existing) return false
-        const merged: StructRecord = { ...existing, ...partial, hash }
-        return structRecordTree.update(hash, merged)
+    const existing = structRecordTree.find(hash)
+    if (!existing) return false
+    const merged: StructRecord = { ...existing, ...partial, hash }
+    return structRecordTree.update(hash, merged)
 }
 
 /**
  * 【查】按 hash 精确查找单条记录。
  */
 export function treeFindByHash(hash: string): StructRecord | undefined {
-        return structRecordTree.find(hash)
+    return structRecordTree.find(hash)
 }
 
 /**
  * 【查】按结构体名（data_type_latter）查找所有匹配记录。
  */
 export function treeFindByStructName(structName: string): StructRecord[] {
-        return structRecordTree.findAll((r) => r.data_type_latter === structName)
+    return structRecordTree.findAll((r) => r.data_type_latter === structName)
 }
 
 /**
  * 【查】按结构体名 + 类型前缀（data_type_first）精确查找。
  */
 export function treeFindByType(structName: string, dataTypeFirst: string): StructRecord[] {
-        return structRecordTree.findAll(
-                (r) => r.data_type_latter === structName && r.data_type_first === dataTypeFirst
-        )
+    return structRecordTree.findAll(
+        (r) => r.data_type_latter === structName && r.data_type_first === dataTypeFirst
+    )
 }
 
 /**
  * 【查】返回红黑树中所有记录（按 hash 字典序升序）。
  */
 export function treeGetAll(): StructRecord[] {
-        return structRecordTree.inorder()
+    return structRecordTree.inorder()
 }
 
 /**
  * 【查】返回当前红黑树中的记录总数。
  */
 export function treeGetSize(): number {
-        return structRecordTree.size
+    return structRecordTree.size
 }
 
 /**
- * 清空红黑树中所有记录。
+ * 清空红黑树中所有记录，同时清空 hash→名称 标签缓存。
  */
 export function treeClear(): void {
-        structRecordTree.clear()
+    structRecordTree.clear()
+    hashLabelMap.clear()
+}
+
+// ─── hash→名称 标签缓存接口 ──────────────────────────────────────────────────
+
+/**
+ * 批量写入 hash→显示名称 缓存。
+ * 供 ipc-handlers 在转化写树时预填父/子节点的名称，使侧边栏在节点尚未加载时仍能显示可读名称。
+ */
+export function treeInsertLabels(entries: Array<[string, string]>): void {
+    for (const [hash, label] of entries) {
+        if (hash && label) hashLabelMap.set(hash, label)
+    }
+}
+
+/**
+ * 按 hash 查询缓存的显示名称；未命中返回 undefined。
+ * 供 query-node-labels 在红黑树中未找到完整记录时回退查询。
+ */
+export function treeFindLabel(hash: string): string | undefined {
+    return hashLabelMap.get(hash)
+}
+
+/**
+ * 构建节点显示标签（'kind name (hashShort)' 格式），供外部模块复用。
+ */
+export function buildLabel(kind: string, name: string, hash: string): string {
+    return buildNodeLabel(kind, name, hash)
 }

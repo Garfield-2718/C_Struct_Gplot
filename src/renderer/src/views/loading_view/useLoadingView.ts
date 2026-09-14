@@ -6,38 +6,38 @@ const DESIGN_HEIGHT = 1080
 
 /** Loading 页面的组合式函数：画布自适应缩放 */
 export function useLoadingView() {
-        const canvasWrapper = ref<HTMLElement | null>(null)
-        const scale = ref(1)
-        let observer: ResizeObserver | null = null
+    const canvasWrapper = ref<HTMLElement | null>(null)
+    const scale = ref(1)
+    let observer: ResizeObserver | null = null
 
-        function updateScale(): void {
-                if (!canvasWrapper.value) return
-                const w = canvasWrapper.value.clientWidth
-                const h = canvasWrapper.value.clientHeight
-                scale.value = Math.min(w / DESIGN_WIDTH, h / DESIGN_HEIGHT)
+    function updateScale(): void {
+        if (!canvasWrapper.value) return
+        const w = canvasWrapper.value.clientWidth
+        const h = canvasWrapper.value.clientHeight
+        scale.value = Math.min(w / DESIGN_WIDTH, h / DESIGN_HEIGHT)
+    }
+
+    onMounted(() => {
+        updateScale()
+        if (canvasWrapper.value) {
+            observer = new ResizeObserver(updateScale)
+            observer.observe(canvasWrapper.value)
         }
+    })
 
-        onMounted(() => {
-                updateScale()
-                if (canvasWrapper.value) {
-                        observer = new ResizeObserver(updateScale)
-                        observer.observe(canvasWrapper.value)
-                }
-        })
+    onUnmounted(() => {
+        observer?.disconnect()
+    })
 
-        onUnmounted(() => {
-                observer?.disconnect()
-        })
+    const router = useRouter()
 
-        const router = useRouter()
+    function handleNavigateToCanvas(): void {
+        router.push('/canvas')
+    }
 
-        function handleNavigateToCanvas(): void {
-                router.push('/canvas')
-        }
-
-        return {
-                canvasWrapper,
-                scale,
-                handleNavigateToCanvas
-        }
+    return {
+        canvasWrapper,
+        scale,
+        handleNavigateToCanvas
+    }
 }

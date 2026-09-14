@@ -1,67 +1,67 @@
 appId: com.electron.app
 productName: C-Struct-Gplot
 directories:
-  buildResources: build
+    buildResources: build
 files:
-  - '!**/.vscode/*'
-  - '!src/*'
-  - '!electron.vite.config.{js,ts,mjs,cjs}'
-  - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
-  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
-  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
-  - '!binaries/**'
-  - '!scripts/**'
-  # 仓库内的样本数据库（db/linux_5_4.db 约 260MB）与设计文档（docs/ 约 35MB）
-  # 仅开发期使用，源码中无任何引用；打进 app.asar 会使 AppImage 从约 100MB 膨胀到 204MB
-  - '!db/**'
-  - '!docs/**'
+    - '!**/.vscode/*'
+    - '!src/*'
+    - '!electron.vite.config.{js,ts,mjs,cjs}'
+    - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
+    - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
+    - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+    - '!binaries/**'
+    - '!scripts/**'
+    # 仓库内的样本数据库（db/linux_5_4.db 约 260MB）与设计文档（docs/ 约 35MB）
+    # 仅开发期使用，源码中无任何引用；打进 app.asar 会使 AppImage 从约 100MB 膨胀到 204MB
+    - '!db/**'
+    - '!docs/**'
 asarUnpack:
-  - resources/**
+    - resources/**
 win:
-  executableName: c-struct-gplot
-  extraResources:
-    - from: binaries/windows-x64
-      to: cli
-      filter:
-        - '**/*'
-        - '!.gitkeep'
+    executableName: c-struct-gplot
+    extraResources:
+        - from: binaries/windows-x64
+          to: cli
+          filter:
+              - '**/*'
+              - '!.gitkeep'
 nsis:
-  artifactName: ${name}-${version}-setup.${ext}
-  shortcutName: ${productName}
-  uninstallDisplayName: ${productName}
-  createDesktopShortcut: always
+    artifactName: ${name}-${version}-setup.${ext}
+    shortcutName: ${productName}
+    uninstallDisplayName: ${productName}
+    createDesktopShortcut: always
 mac:
-  entitlementsInherit: build/entitlements.mac.plist
-  extendInfo:
-    - NSCameraUsageDescription: Application requests access to the device's camera.
-    - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
-    - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
-    - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
-  notarize: false
+    entitlementsInherit: build/entitlements.mac.plist
+    extendInfo:
+        - NSCameraUsageDescription: Application requests access to the device's camera.
+        - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
+        - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
+        - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
+    notarize: false
 dmg:
-  artifactName: ${name}-${version}.${ext}
+    artifactName: ${name}-${version}.${ext}
 linux:
-  target:
-    - AppImage
-    - snap
-    - deb
-  maintainer: electronjs.org
-  category: Utility
-  extraResources:
-    - from: binaries/linux-x64
-      to: cli
-      filter:
-        - '**/*'
-        - '!.gitkeep'
+    target:
+        - AppImage
+        - snap
+        - deb
+    maintainer: electronjs.org
+    category: Utility
+    extraResources:
+        - from: binaries/linux-x64
+          to: cli
+          filter:
+              - '**/*'
+              - '!.gitkeep'
 appImage:
-  artifactName: ${name}-${version}.${ext}
+    artifactName: ${name}-${version}.${ext}
 # Electron 发行包（约 113MB）的下载源。默认源是 GitHub Releases，国内网络下常以
 # ~100KB/s 龟速下载，构建会长时间停在 “packaging” 阶段且无任何输出，看似卡死。
 # 注意：@electron/get 的缓存目录名 = sha256(下载 URL 去掉文件名)，换源即换缓存键，
 # 首次使用镜像仍会完整下载一次，之后命中本地缓存不再联网。
 electronDownload:
-  mirror: https://npmmirror.com/mirrors/electron/
+    mirror: https://npmmirror.com/mirrors/electron/
 npmRebuild: false
 publish:
-  provider: generic
-  url: https://example.com/auto-updates
+    provider: generic
+    url: https://example.com/auto-updates

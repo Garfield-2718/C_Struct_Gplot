@@ -4,14 +4,8 @@
             id="11_51"
             class="debug_button-frame-11_51 pixso-relative-no-shrink pixso-bg-transparent"
         >
-            <div
-                id="11_57"
-                class="debug_button-frame-11_57 pixso-flex-auto-size"
-            >
-                <div
-                    id="11_62"
-                    class="debug_button-vector-11_62 pixso-relative-no-shrink"
-                ></div>
+            <div id="11_57" class="debug_button-frame-11_57 pixso-flex-auto-size">
+                <div id="11_62" class="debug_button-vector-11_62 pixso-relative-no-shrink"></div>
             </div>
         </div>
     </div>

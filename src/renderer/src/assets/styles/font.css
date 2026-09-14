@@ -1,7 +1,7 @@
 /* 内置思源黑体（可变字重）：全局中文字体，避免 WSL/Linux 缺少中文字体显示为 □ */
 @font-face {
-        font-family: 'Noto Sans SC';
-        font-style: normal;
-        font-weight: 100 900;
-        src: url('@/assets/fonts/NotoSansSC-VariableFont_wght_2.ttf') format('truetype');
+    font-family: 'Noto Sans SC';
+    font-style: normal;
+    font-weight: 100 900;
+    src: url('@/assets/fonts/NotoSansSC-VariableFont_wght_2.ttf') format('truetype');
 }
