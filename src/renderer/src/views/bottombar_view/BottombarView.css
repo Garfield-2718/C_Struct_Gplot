@@ -9,14 +9,14 @@
     padding: 4px;
     background-color: var(--vs-widget-bg);
     border: 1px solid var(--vs-widget-border);
-    border-radius: 6px;
+    border-radius: 2px;
     box-shadow: var(--vs-shadow);
     transform: translateX(-50%);
     user-select: none;
 }
 
 /* ========== 收起/展开手柄：占据底边栏顶部整宽，收起后即为底边栏仅存的可点击区 ========== */
-.bottombar-collapse-handle {
+.bottombar-panel .bottombar-collapse-handle {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -25,7 +25,7 @@
     padding: 0;
     border: none;
     border-bottom: 1px solid transparent;
-    border-radius: 4px 4px 0 0;
+    border-radius: 2px 2px 0 0;
     background: transparent;
     color: var(--vs-foreground);
     cursor: pointer;
@@ -36,13 +36,17 @@
     border-bottom-color: var(--vs-widget-border);
 }
 
-.bottombar-collapse-handle:hover {
+.bottombar-panel .bottombar-collapse-handle:hover {
     background-color: var(--vs-list-hover-bg);
     color: var(--vs-title-foreground);
 }
 
+.bottombar-panel .bottombar-collapse-handle:active {
+    background-color: var(--vs-list-inactive-selection-bg);
+}
+
 /* 指向三角：纯 CSS 边框绘制，展开态向下（点击收起），收起态旋转 180° 向上（点击展开） */
-.bottombar-collapse-arrow {
+.bottombar-panel .bottombar-collapse-arrow {
     display: block;
     width: 0;
     height: 0;
@@ -58,7 +62,7 @@
 
 /* ========== 按键组外层：网格轨道 1fr → 0fr 实现宽高同步收缩，无需预设尺寸即可过渡 ========== */
 /* visibility 同步关闭，避免收起后被裁剪的按键仍可通过键盘聚焦 */
-.bottombar-tools-wrapper {
+.bottombar-panel .bottombar-tools-wrapper {
     display: grid;
     grid-template-columns: 1fr;
     grid-template-rows: 1fr;
@@ -81,7 +85,7 @@
 
 /* ========== 按键组：横向排列，按键数量与宽度共同决定底边栏宽度 ========== */
 /* 作为网格项需允许收缩到 0，超出部分由外层裁剪 */
-.bottombar-tools {
+.bottombar-panel .bottombar-tools {
     display: flex;
     align-items: center;
     gap: 4px;
@@ -91,10 +95,10 @@
 }
 
 /* ========== 工具按键：无边框文本按键，配色与侧边栏保持一致 ========== */
-.bottombar-tool-button {
+.bottombar-panel .bottombar-tool-button {
     padding: 4px 12px;
     border: none;
-    border-radius: 4px;
+    border-radius: 2px;
     background: transparent;
     font-family: inherit;
     font-size: 13px;
@@ -103,12 +107,18 @@
     cursor: pointer;
 }
 
-.bottombar-tool-button:hover {
+.bottombar-panel .bottombar-tool-button:hover {
     background-color: var(--vs-list-hover-bg);
 }
 
-.bottombar-tool-button:active {
+.bottombar-panel .bottombar-tool-button:active {
     background-color: var(--vs-list-inactive-selection-bg);
+}
+
+.bottombar-panel .bottombar-collapse-handle:focus-visible,
+.bottombar-panel .bottombar-tool-button:focus-visible {
+    outline: 1px solid var(--vs-focus-border);
+    outline-offset: -2px;
 }
 
 /* ========== 添加节点对话框：Teleport 至 body，全屏半透明遮罩 + 居中面板 ========== */
@@ -123,7 +133,7 @@
 }
 
 /* 对话框面板：配色与底边栏保持一致，纵向排列标题/输入框/操作区 */
-.add-node-dialog {
+.add-node-overlay .add-node-dialog {
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -132,12 +142,12 @@
     padding: 20px;
     background-color: var(--vs-editor-bg);
     border: 1px solid var(--vs-widget-border);
-    border-radius: 8px;
+    border-radius: 2px;
     box-shadow: var(--vs-shadow-heavy);
     user-select: none;
 }
 
-.add-node-title {
+.add-node-overlay .add-node-title {
     font-size: 15px;
     font-weight: 600;
     line-height: 22px;
@@ -145,65 +155,76 @@
 }
 
 /* 节点内容输入框：底层以字符串保存，聚焦时高亮边框 */
-.add-node-input {
+.add-node-overlay .add-node-input {
     box-sizing: border-box;
     width: 100%;
     padding: 8px 10px;
     background-color: var(--vs-editor-bg);
-    border: 1px solid var(--vs-input-border);
-    border-radius: 4px;
+    border: 1px solid var(--vs-widget-border);
+    border-radius: 2px;
     font-family: inherit;
     font-size: 13px;
     line-height: 20px;
-    color: var(--vs-title-foreground);
+    color: var(--vs-foreground);
     outline: none;
 }
 
-.add-node-input:focus {
+.add-node-overlay .add-node-input::placeholder {
+    color: var(--vs-description-foreground);
+    opacity: 1;
+}
+
+.add-node-overlay .add-node-input:focus {
     border-color: var(--vs-focus-border);
-    box-shadow: 0 0 0 2px rgba(0, 144, 241, 0.2);
+    outline: 1px solid var(--vs-focus-border);
+    outline-offset: -2px;
 }
 
 /* 操作区：确认/取消按键右对齐并列排放 */
-.add-node-actions {
+.add-node-overlay .add-node-actions {
     display: flex;
     justify-content: flex-end;
     gap: 8px;
 }
 
-.add-node-button {
+.add-node-overlay .add-node-button {
     padding: 6px 16px;
-    background-color: var(--vs-button-secondary-bg);
+    background-color: var(--vs-widget-bg);
     border: 1px solid var(--vs-widget-border);
-    border-radius: 4px;
+    border-radius: 2px;
     font-family: inherit;
     font-size: 13px;
     line-height: 20px;
-    color: var(--vs-button-secondary-fg);
+    color: var(--vs-foreground);
     cursor: pointer;
 }
 
-.add-node-button:hover {
+.add-node-overlay .add-node-button:hover {
     background-color: var(--vs-list-hover-bg);
 }
 
-.add-node-button:active {
+.add-node-overlay .add-node-button:active {
     background-color: var(--vs-list-inactive-selection-bg);
 }
 
+.add-node-overlay .add-node-button:focus-visible {
+    outline: 1px solid var(--vs-focus-border);
+    outline-offset: -2px;
+}
+
 /* 主操作按键（确认）：柔和蓝强调，与输入框聚焦色呼应 */
-.add-node-button-primary {
+.add-node-overlay .add-node-button-primary {
     background-color: var(--vs-button-bg);
     border-color: var(--vs-button-bg);
     color: var(--vs-button-fg);
 }
 
-.add-node-button-primary:hover {
+.add-node-overlay .add-node-button-primary:hover {
     background-color: var(--vs-button-hover-bg);
     border-color: var(--vs-button-hover-bg);
 }
 
-.add-node-button-primary:active {
+.add-node-overlay .add-node-button-primary:active {
     background-color: var(--vs-button-hover-bg);
     border-color: var(--vs-button-hover-bg);
 }

@@ -1,142 +1,102 @@
-/* ========== 画布自适应缩放 ========== */
-.scale-wrapper {
+.ldv-page {
+    display: grid;
+    grid-template-rows: 44px minmax(0, 1fr);
     width: 100%;
     height: 100%;
-    overflow: hidden;
+    min-width: 0;
+    min-height: 0;
+    background-color: var(--vs-editor-bg);
+    color: var(--vs-foreground);
+    font-size: 14px;
+    line-height: 22px;
+}
+
+.ldv-titlebar {
     display: flex;
     align-items: center;
-    justify-content: center;
-    background-color: var(--vs-editor-bg);
-}
-
-.loading-page-canvas {
-    width: 1920px;
-    height: 1080px;
-    overflow: hidden;
-    background-color: var(--vs-editor-bg);
-    mix-blend-mode: normal;
-    transform-origin: center center;
-    position: relative;
-    flex-shrink: 0;
-}
-
-/* ========== 顶部标题栏装饰条（VSCode 风格，纯 CSS 伪元素） ========== */
-.loading-page-canvas::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 48px;
+    min-width: 0;
+    padding: 0 24px;
     background-color: var(--vs-titlebar-bg);
     border-bottom: 1px solid var(--vs-widget-border);
-    pointer-events: none;
+    color: var(--vs-title-foreground);
 }
 
-.loading-page-canvas::after {
+.ldv-workspace {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    padding: 24px;
+    overflow: auto;
+}
+
+.ldv-content {
+    flex-shrink: 0;
+    width: 100%;
+    max-width: 480px;
+    min-width: 0;
+    margin: auto;
+}
+
+.ldv-title {
+    margin: 0;
+    color: var(--vs-title-foreground);
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 32px;
+}
+
+.ldv-description {
+    margin: 8px 0 24px;
+}
+
+.ldv-progress {
+    height: 4px;
+    overflow: hidden;
+    border-radius: 2px;
+    background-color: var(--vs-sidebar-bg);
+}
+
+.ldv-progress::before {
     content: '';
-    position: absolute;
-    top: 19px;
-    left: 20px;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background-color: var(--vs-button-bg);
-    box-shadow:
-        18px 0 0 0 var(--vs-input-border),
-        36px 0 0 0 var(--vs-input-border);
-    pointer-events: none;
+    display: block;
+    width: 40%;
+    height: 100%;
+    border-radius: 2px;
+    background-color: var(--vs-progress-bg);
+    transform: translateX(75%);
+    animation: ldv-progress-slide 1.6s ease-in-out infinite;
 }
 
-/* ========== 加载动画 Spinner（VS 主题蓝环） ========== */
-.loading-spinner {
-    width: 120px;
-    height: 120px;
-    position: absolute;
-    left: calc(50% - 60px);
-    top: 432px;
-    border-radius: 50%;
-    background: conic-gradient(
-        from 0deg,
-        var(--vs-button-bg) 0deg,
-        var(--vs-button-bg) 40deg,
-        transparent 200deg,
-        transparent 360deg
-    );
-    -webkit-mask: radial-gradient(circle, transparent 56px, #000 56px, #000 60px, transparent 60px);
-    mask: radial-gradient(circle, transparent 56px, #000 56px, #000 60px, transparent 60px);
-    animation: loading-spin 2s linear infinite;
-}
-
-@keyframes loading-spin {
+@keyframes ldv-progress-slide {
     from {
-        transform: rotate(0deg);
+        transform: translateX(-100%);
     }
     to {
-        transform: rotate(360deg);
+        transform: translateX(250%);
     }
 }
 
-/* ========== 加载文字 ========== */
-.loading-text {
-    position: absolute;
-    left: 50%;
-    top: 592px;
-    transform: translateX(-50%);
-    margin: 0;
-    font-size: 24px;
-    font-family: 'Noto Sans SC';
-    font-weight: 400;
-    letter-spacing: 2px;
-    text-align: center;
-    color: var(--vs-foreground);
-    white-space: pre;
-    mix-blend-mode: normal;
+@media (prefers-reduced-motion: reduce) {
+    .ldv-progress::before {
+        animation: none;
+    }
 }
 
-/* ========== 进度条（VSCode 风格不确定进度） ========== */
-.loading-progress {
-    position: absolute;
-    left: calc(50% - 100px);
-    top: 660px;
+.ldv-debug-slot {
+    position: relative;
     width: 200px;
-    height: 3px;
-    background-color: rgba(14, 112, 192, 0.12);
-    overflow: hidden;
-    border-radius: 1px;
+    height: 120px;
+    margin: 24px 0 0 auto;
+    background-color: var(--vs-editor-bg);
 }
 
-.loading-progress::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 40%;
-    background-color: var(--vs-progress-bg);
-    border-radius: 1px;
-    animation: loading-progress-slide 1.6s ease-in-out infinite;
-}
+@media (max-width: 640px) {
+    .ldv-titlebar {
+        padding: 0 16px;
+    }
 
-@keyframes loading-progress-slide {
-    0% {
-        left: -40%;
-        width: 30%;
+    .ldv-workspace {
+        padding: 16px;
     }
-    50% {
-        width: 55%;
-    }
-    100% {
-        left: 100%;
-        width: 30%;
-    }
-}
-
-/* ========== 调试按钮定位容器 ========== */
-.debug-button-position {
-    position: absolute;
-    left: 50%;
-    top: 960px;
-    width: 200px;
-    transform: translateX(-50%);
 }

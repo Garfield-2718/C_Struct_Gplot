@@ -1,128 +1,121 @@
-/* ========== 画布自适应缩放 ========== */
-.scale-wrapper {
+.imv-page {
+    display: grid;
+    grid-template-rows: 44px minmax(0, 1fr);
     width: 100%;
     height: 100%;
-    overflow: hidden;
+    min-width: 0;
+    min-height: 0;
+    background-color: var(--vs-editor-bg);
+    color: var(--vs-foreground);
+    font-size: 14px;
+    line-height: 22px;
+}
+
+.imv-titlebar {
     display: flex;
     align-items: center;
-    justify-content: center;
-}
-
-.import-page-canvas {
-    width: 1920px;
-    height: 1080px;
-    overflow: hidden;
-    background-color: var(--vs-editor-bg);
-    transform-origin: center center;
-    position: relative;
-    flex-shrink: 0;
-}
-
-/* ========== 顶部标题栏条（VSCode 风格） ========== */
-.import-titlebar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 48px;
+    min-width: 0;
+    padding: 0 24px;
     background-color: var(--vs-titlebar-bg);
     border-bottom: 1px solid var(--vs-widget-border);
+    color: var(--vs-title-foreground);
 }
 
-/* ========== 拖拽/点击选择区域 ========== */
-.drop-zone {
-    position: absolute;
-    left: 50%;
-    top: 30%;
-    width: 680px;
-    height: 360px;
-    transform: translate(-50%, -50%);
-    cursor: pointer;
+.imv-workspace {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    padding: 24px;
+    overflow: auto;
+}
+
+.imv-content {
+    flex-shrink: 0;
+    width: 100%;
+    max-width: 560px;
+    min-width: 0;
+    margin: auto;
+}
+
+.imv-title {
+    margin: 0;
+    color: var(--vs-title-foreground);
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 32px;
+}
+
+.imv-description {
+    margin: 8px 0 24px;
+}
+
+.imv-file-picker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    height: 208px;
+    padding: 24px;
+    border: 1px solid var(--vs-widget-border);
+    border-radius: 2px;
     background-color: var(--vs-sidebar-bg);
-    border: 2px dashed var(--vs-input-border);
-    border-radius: 8px;
-    transition:
-        border-color 0.2s ease,
-        background-color 0.2s ease,
-        box-shadow 0.2s ease;
+    color: var(--vs-foreground);
+    font: inherit;
+    text-align: center;
+    cursor: pointer;
 }
 
-/* 悬停：轻微阴影 + 主题蓝边框，提示可点击 */
-.drop-zone:hover {
+.imv-file-picker:hover {
     border-color: var(--vs-button-bg);
-    box-shadow: var(--vs-shadow);
 }
 
-/* 拖拽悬停：焦点蓝边框 + 淡蓝背景 */
-.drop-zone.drag-over {
+.imv-file-picker:focus-visible,
+.imv-file-picker-drag-over {
     border-color: var(--vs-focus-border);
-    background-color: var(--vs-list-inactive-selection-bg);
+    outline: 2px solid var(--vs-focus-border);
+    outline-offset: -3px;
 }
 
-/* 十字（加号）图标：48px，线宽 2px */
-.drop-zone::before,
-.drop-zone::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    background-color: var(--vs-description-foreground);
+.imv-file-icon {
+    flex-shrink: 0;
     pointer-events: none;
 }
 
-.drop-zone::before {
-    width: 48px;
-    height: 2px;
-    transform: translate(-50%, -50%);
+.imv-file-label {
+    padding: 6px 16px;
+    border-radius: 2px;
+    background-color: var(--vs-button-bg);
+    color: var(--vs-button-fg);
+    pointer-events: none;
 }
 
-.drop-zone::after {
-    width: 2px;
-    height: 48px;
-    transform: translate(-50%, -50%);
+.imv-file-picker:hover .imv-file-label,
+.imv-file-picker-drag-over .imv-file-label {
+    background-color: var(--vs-button-hover-bg);
 }
 
-/* 旧版子元素：由 .drop-zone 直接承载样式，保留节点但不渲染 */
-.drop-zone-bg,
-.drop-zone-border {
-    display: none;
-}
-
-/* ========== 提示文字 ========== */
-.hint-text {
-    position: absolute;
-    left: 50%;
-    top: calc(30% + 212px);
-    transform: translateX(-50%);
-    font-size: 16px;
-    font-family: 'Noto Sans SC';
-    font-weight: 400;
-    text-align: center;
-    letter-spacing: 0px;
+.imv-file-hint {
     color: var(--vs-description-foreground);
-    white-space: nowrap;
+    pointer-events: none;
 }
 
-/* 次级提示：支持的文件格式 */
-.hint-text::after {
-    content: '支持 .db 格式文件';
-    display: block;
-    margin-top: 8px;
-    font-size: 13px;
-    color: var(--vs-placeholder-foreground);
-}
-
-/* ========== 调试按钮定位容器 ========== */
-.debug-button-position {
-    position: absolute;
-    left: 50%;
-    top: 960px;
+.imv-debug-slot {
+    position: relative;
     width: 200px;
-    transform: translateX(-50%);
+    height: 120px;
+    margin: 24px 0 0 auto;
+    background-color: var(--vs-editor-bg);
 }
 
-/* ========== 装饰线条（旧版十字虚线图标，已由 .drop-zone 伪元素替代） ========== */
-.line-horizontal,
-.line-vertical {
-    display: none;
+@media (max-width: 640px) {
+    .imv-titlebar {
+        padding: 0 16px;
+    }
+
+    .imv-workspace {
+        padding: 16px;
+    }
 }

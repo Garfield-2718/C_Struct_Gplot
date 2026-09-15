@@ -1,22 +1,26 @@
 <template>
-    <div class="scale-wrapper" :ref="(el) => (canvasWrapper = el as HTMLElement | null)">
-        <div class="loading-page-canvas" :style="{ transform: `scale(${scale})` }">
-            <div class="loading-spinner"></div>
-            <p class="loading-text">
-                {{ '加载中' }}
-            </p>
-            <div class="loading-progress"></div>
-            <div class="debug-button-position">
-                <DebugButton @click="handleNavigateToCanvas" />
-            </div>
-        </div>
+    <div class="ldv-page">
+        <header class="ldv-titlebar">项目加载</header>
+        <main class="ldv-workspace">
+            <section class="ldv-content" aria-labelledby="ldv-title">
+                <div class="ldv-status" role="status" aria-live="polite" aria-atomic="true">
+                    <h1 id="ldv-title" class="ldv-title">加载中</h1>
+                    <p class="ldv-description">正在处理项目，请稍候。</p>
+                    <div class="ldv-progress" aria-hidden="true"></div>
+                </div>
+                <div class="ldv-debug-slot">
+                    <DebugButton @click="handleNavigateToCanvas" />
+                </div>
+            </section>
+        </main>
     </div>
 </template>
 
 <script lang="ts" setup>
 import { useLoadingView } from './useLoadingView'
 import DebugButton from '@/views/debug_button/DebugButton.vue'
-import './LoadingView.css'
 
-const { canvasWrapper, scale, handleNavigateToCanvas } = useLoadingView()
+const { handleNavigateToCanvas } = useLoadingView()
 </script>
+
+<style scoped src="./LoadingView.css"></style>

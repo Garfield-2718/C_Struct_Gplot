@@ -8,40 +8,46 @@
     width: var(--sidebar-width);
     height: calc(100% - var(--topbar-height, 0px));
     background-color: var(--vs-sidebar-bg);
-    box-shadow: 2px 0 6px rgba(0, 0, 0, 0.08);
+    box-shadow: inset -1px 0 0 var(--vs-widget-border);
     user-select: none;
 }
 
 /* ========== 内容区：三段式（元素信息 / 父节点信息 / 子节点信息），超出滚动 ========== */
-.sidebar-content {
+.sidebar-panel .sidebar-content {
     flex: 1;
     overflow-y: auto;
-    color: var(--vs-title-foreground);
+    color: var(--vs-foreground);
 }
 
 /* ========== 分段：标题栏（点击折叠）+ 内容自适应内容区（max-height 封顶、可滚动）+ 底边框拖拽条 ========== */
-.sidebar-section {
+.sidebar-panel .sidebar-section {
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
 }
 
 /* ========== 分段标题栏：带折叠箭头，点击切换折叠/展开 ========== */
-.sidebar-section-header {
+.sidebar-panel .sidebar-section-header {
     display: flex;
     align-items: center;
     gap: 8px;
     padding: 8px 12px;
-    border-bottom: 1px solid var(--vs-sidebar-section-border);
+    background-color: var(--vs-tabs-bg);
+    border-bottom: 1px solid var(--vs-widget-border);
+    box-shadow: inset -1px 0 0 var(--vs-widget-border);
     cursor: pointer;
 }
 
-.sidebar-section-header:hover {
+.sidebar-panel .sidebar-section-header:hover {
     background-color: var(--vs-list-hover-bg);
 }
 
+.sidebar-panel .sidebar-section-header:active {
+    background-color: var(--vs-list-inactive-selection-bg);
+}
+
 /* 折叠箭头：展开时指向下，折叠时旋转指向右 */
-.sidebar-collapse-arrow {
+.sidebar-panel .sidebar-collapse-arrow {
     flex-shrink: 0;
     width: 6px;
     height: 6px;
@@ -51,47 +57,47 @@
     transition: transform 0.15s ease;
 }
 
-.sidebar-collapse-arrow.is-collapsed {
+.sidebar-panel .sidebar-collapse-arrow.is-collapsed {
     transform: rotate(-45deg);
 }
 
-.sidebar-section-title {
+.sidebar-panel .sidebar-section-title {
     margin: 0;
     font-size: 13px;
     font-weight: 600;
-    color: var(--vs-foreground);
+    color: var(--vs-title-foreground);
 }
 
 /* ========== 分段内容区：高度随内容自适应，但以拖拽设定的 max-height 封顶，超出滚动 ========== */
 /* 内容短于上限时按内容收缩（不留白），拖大仅提高上限；行文本换行时行高自动撑高 */
-.sidebar-section-body {
+.sidebar-panel .sidebar-section-body {
     overflow-y: auto;
     padding: 4px 0;
 }
 
 /* 各段 max-height 引用根节点 CSS 变量，由底边框拖拽动态更新 */
-.sidebar-section-body--element-info {
+.sidebar-panel .sidebar-section-body--element-info {
     max-height: var(--element-info-height);
 }
 
-.sidebar-section-body--parent-nodes {
+.sidebar-panel .sidebar-section-body--parent-nodes {
     max-height: var(--parent-nodes-height);
 }
 
-.sidebar-section-body--child-nodes {
+.sidebar-panel .sidebar-section-body--child-nodes {
     max-height: var(--child-nodes-height);
 }
 
 /* ========== 列表通用：去除默认样式，每项占一行 ========== */
-.sidebar-info-list,
-.sidebar-node-list {
+.sidebar-panel .sidebar-info-list,
+.sidebar-panel .sidebar-node-list {
     margin: 0;
     padding: 0;
     list-style: none;
 }
 
 /* ========== 元素信息行：键值对布局，值过长时自动换行并撑高本行，key 与首行顶部对齐 ========== */
-.sidebar-info-row {
+.sidebar-panel .sidebar-info-row {
     display: flex;
     align-items: flex-start;
     gap: 8px;
@@ -100,13 +106,13 @@
     line-height: 20px;
 }
 
-.sidebar-info-key {
+.sidebar-panel .sidebar-info-key {
     flex-shrink: 0;
     width: 56px;
     color: var(--vs-description-foreground);
 }
 
-.sidebar-info-value {
+.sidebar-panel .sidebar-info-value {
     flex: 1;
     min-width: 0;
     white-space: normal;
@@ -115,7 +121,7 @@
 }
 
 /* ========== 节点信息行：行侧类 PS 显隐按键 + 节点名称，名称过长时自动换行并撑高本行 ========== */
-.sidebar-node-row {
+.sidebar-panel .sidebar-node-row {
     display: flex;
     align-items: flex-start;
     gap: 8px;
@@ -124,11 +130,12 @@
     line-height: 20px;
 }
 
-.sidebar-node-row:hover {
+.sidebar-panel .sidebar-node-row:hover {
     background-color: var(--vs-list-hover-bg);
+    box-shadow: inset -1px 0 0 var(--vs-widget-border);
 }
 
-.sidebar-node-label {
+.sidebar-panel .sidebar-node-label {
     flex: 1;
     min-width: 0;
     white-space: normal;
@@ -137,12 +144,12 @@
 }
 
 /* 行隐藏后文本变淡，提示当前不可见 */
-.sidebar-node-row.is-hidden .sidebar-node-label {
+.sidebar-panel .sidebar-node-row.is-hidden .sidebar-node-label {
     color: var(--vs-disabled-foreground);
 }
 
 /* ========== 显隐按键：眼睛图标，点击切换行可见状态 ========== */
-.sidebar-visibility-toggle {
+.sidebar-panel .sidebar-visibility-toggle {
     display: flex;
     flex-shrink: 0;
     align-items: center;
@@ -151,17 +158,31 @@
     height: 20px;
     padding: 0;
     border: none;
+    border-radius: 2px;
     background: transparent;
     color: var(--vs-foreground);
     cursor: pointer;
 }
 
-.sidebar-visibility-toggle.is-off {
+.sidebar-panel .sidebar-visibility-toggle:hover {
+    background-color: var(--vs-list-hover-bg);
+}
+
+.sidebar-panel .sidebar-visibility-toggle:active {
+    background-color: var(--vs-list-inactive-selection-bg);
+}
+
+.sidebar-panel .sidebar-visibility-toggle:focus-visible {
+    outline: 1px solid var(--vs-focus-border);
+    outline-offset: -2px;
+}
+
+.sidebar-panel .sidebar-visibility-toggle.is-off {
     color: var(--vs-input-border);
 }
 
 /* 眼睛图标：45° 旋转的圆角矩形模拟眼眶轮廓，::before 为瞳孔 */
-.sidebar-eye-icon {
+.sidebar-panel .sidebar-eye-icon {
     position: relative;
     display: block;
     width: 12px;
@@ -171,7 +192,7 @@
     transform: rotate(45deg);
 }
 
-.sidebar-eye-icon::before {
+.sidebar-panel .sidebar-eye-icon::before {
     content: '';
     position: absolute;
     top: 50%;
@@ -184,7 +205,7 @@
 }
 
 /* 隐藏状态：眼睛叠加斜线表示已关闭 */
-.sidebar-visibility-toggle.is-off .sidebar-eye-icon::after {
+.sidebar-panel .sidebar-visibility-toggle.is-off .sidebar-eye-icon::after {
     content: '';
     position: absolute;
     top: 50%;
@@ -196,7 +217,7 @@
 }
 
 /* ========== 分段底边框拖拽条：光标提示可纵向拖动调节内容区 max-height 上限 ========== */
-.sidebar-section-resizer {
+.sidebar-panel .sidebar-section-resizer {
     flex-shrink: 0;
     height: 5px;
     border-bottom: 1px solid var(--vs-widget-border);
@@ -204,31 +225,31 @@
 }
 
 /* 悬停/拖动时高亮边框，反馈当前调节的边界 */
-.sidebar-section-resizer:hover,
-.sidebar-section-resizer:active {
+.sidebar-panel .sidebar-section-resizer:hover,
+.sidebar-panel .sidebar-section-resizer:active {
     border-bottom-color: var(--vs-focus-border);
     background-color: rgba(0, 144, 241, 0.15);
 }
 
 /* ========== 分段折叠/展开过渡：内容区 max-height 与内边距收缩到 0 ========== */
 /* 需置于内容区规则之后，同优先级下以覆盖其 max-height 与内边距 */
-.sidebar-collapse-enter-active,
-.sidebar-collapse-leave-active {
+.sidebar-panel .sidebar-collapse-enter-active,
+.sidebar-panel .sidebar-collapse-leave-active {
     overflow: hidden;
     transition:
         max-height 0.2s ease,
         padding 0.2s ease;
 }
 
-.sidebar-collapse-enter-from,
-.sidebar-collapse-leave-to {
+.sidebar-panel .sidebar-collapse-enter-from,
+.sidebar-panel .sidebar-collapse-leave-to {
     max-height: 0;
     padding-top: 0;
     padding-bottom: 0;
 }
 
 /* ========== 拖拽手柄：覆盖侧边栏右缘，光标提示可拖动 ========== */
-.sidebar-resize-handle {
+.sidebar-panel .sidebar-resize-handle {
     position: absolute;
     top: 0;
     right: var(--sidebar-handle-right);
@@ -238,7 +259,7 @@
 }
 
 /* 手柄悬停/拖动时高亮中缝，反馈当前调节的边界 */
-.sidebar-resize-handle:hover,
-.sidebar-resize-handle:active {
+.sidebar-panel .sidebar-resize-handle:hover,
+.sidebar-panel .sidebar-resize-handle:active {
     background-color: rgba(0, 144, 241, 0.35);
 }
