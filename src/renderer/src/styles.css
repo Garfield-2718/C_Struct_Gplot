@@ -1,3 +1,55 @@
+:root {
+    /* === VS Light Theme — Core Surfaces === */
+    --vs-editor-bg: #ffffff;
+    --vs-sidebar-bg: #f3f3f3;
+    --vs-titlebar-bg: #dddddd;
+    --vs-titlebar-inactive-bg: #e5e5e5;
+    --vs-widget-bg: #f3f3f3;
+    --vs-panel-bg: #ffffff;
+    --vs-tabs-bg: #e8e8e8;
+
+    /* === VS Light Theme — Text === */
+    --vs-foreground: #616161;
+    --vs-strong-foreground: #000000;
+    --vs-title-foreground: #333333;
+    --vs-description-foreground: #717171;
+    --vs-disabled-foreground: #61616180;
+    --vs-icon-foreground: #424242;
+    --vs-placeholder-foreground: #767676;
+
+    /* === VS Light Theme — Borders === */
+    --vs-widget-border: #d4d4d4;
+    --vs-input-border: #cecece;
+    --vs-separator: #0000002e;
+    --vs-sidebar-section-border: #61616130;
+
+    /* === VS Light Theme — Interactive === */
+    --vs-button-bg: #007acc;
+    --vs-button-fg: #ffffff;
+    --vs-button-hover-bg: #0062a3;
+    --vs-button-secondary-bg: #f0f0f0;
+    --vs-button-secondary-fg: #616161;
+    --vs-button-secondary-border: #61616126;
+    --vs-focus-border: #0090f1;
+    --vs-list-hover-bg: #e8e8e8;
+    --vs-list-active-selection-bg: #0060c0;
+    --vs-list-active-selection-fg: #ffffff;
+    --vs-list-inactive-selection-bg: #e4e6f1;
+    --vs-toolbar-hover-bg: #b8b8b850;
+
+    /* === VS Light Theme — Status === */
+    --vs-statusbar-bg: #007acc;
+    --vs-statusbar-fg: #ffffff;
+    --vs-error-foreground: #a1260d;
+    --vs-progress-bg: #0e70c0;
+
+    /* === VS Light Theme — Shadows & Overlays === */
+    --vs-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    --vs-shadow-heavy: 0 8px 24px rgba(0, 0, 0, 0.2);
+    --vs-overlay-bg: rgba(0, 0, 0, 0.35);
+    --vs-scrollbar-shadow: #dddddd;
+}
+
 * {
     margin: 0;
     padding: 0;

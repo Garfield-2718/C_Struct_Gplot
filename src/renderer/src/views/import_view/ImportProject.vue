@@ -1,6 +1,7 @@
 <template>
     <div class="scale-wrapper" :ref="(el) => (canvasWrapper = el as HTMLElement | null)">
         <div class="import-page-canvas" :style="{ transform: `scale(${scale})` }">
+            <div class="import-titlebar"></div>
             <div
                 class="drop-zone"
                 :class="{ 'drag-over': isDragOver }"

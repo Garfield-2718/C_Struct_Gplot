@@ -7,13 +7,13 @@
     line-height: 1;
 }
 
-/* ========== 标题栏：颜色按元素类型区分，折叠节点统一为紫色 ========== */
+/* ========== 标题栏：至少 26px 高（标题过长换行时自适应增高），颜色按元素类型区分，折叠节点统一为紫色 ========== */
 .struct-node-header {
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 26px;
+    min-height: 26px;
     border-bottom: 0.5px solid #cccccc;
 }
 
@@ -33,13 +33,17 @@
     background: #9b59b6;
 }
 
+/* 标题文本：卡片宽度封顶后超长内容在标题栏内换行（而非被裁剪成省略号），居中显示 */
 .struct-node-title {
     max-width: 100%;
-    overflow: hidden;
+    padding: 4px 10px;
     color: white;
     font-weight: bold;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+    line-height: 1.25;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 /* ========== 字段行：至少 26px 高（内容换行时可增高），偶数行斑马纹底，行间细分隔线 ========== */

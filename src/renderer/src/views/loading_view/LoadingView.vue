@@ -5,6 +5,7 @@
             <p class="loading-text">
                 {{ '加载中' }}
             </p>
+            <div class="loading-progress"></div>
             <div class="debug-button-position">
                 <DebugButton @click="handleNavigateToCanvas" />
             </div>

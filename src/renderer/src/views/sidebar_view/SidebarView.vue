@@ -35,9 +35,18 @@
                                 v-for="row in elementInfoRows"
                                 :key="row.key"
                                 class="sidebar-info-row"
-                                :class="{ 'sidebar-info-row--wrap': row.wrap }"
                             >
                                 <span class="sidebar-info-key">{{ row.key }}</span>
+                                <!-- 名称行：结构体名前的小眼睛，控制当前选中元素在画布上的显隐 -->
+                                <button
+                                    v-if="row.visibilityToggle"
+                                    class="sidebar-visibility-toggle"
+                                    :class="{ 'is-off': !selectedNodeVisible }"
+                                    :title="selectedNodeVisible ? '隐藏该元素' : '显示该元素'"
+                                    @click="handleToggleSelectedVisible"
+                                >
+                                    <span class="sidebar-eye-icon"></span>
+                                </button>
                                 <span class="sidebar-info-value">{{ row.value }}</span>
                             </li>
                         </ul>
@@ -187,9 +196,11 @@ const {
     elementInfoRows,
     parentNodes,
     childNodes,
+    selectedNodeVisible,
     sectionStates,
     handleStartResize,
     handleToggleRowVisible,
+    handleToggleSelectedVisible,
     handleToggleSection,
     handleStartResizeSection
 } = useSidebarView(toRef(props, 'selectedNode'), toRef(props, 'canvasNodeIds'), {

@@ -6,36 +6,65 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    background-color: var(--vs-editor-bg);
 }
 
 .loading-page-canvas {
     width: 1920px;
     height: 1080px;
     overflow: hidden;
-    background-color: rgba(255, 255, 255, 1);
+    background-color: var(--vs-editor-bg);
     mix-blend-mode: normal;
     transform-origin: center center;
     position: relative;
     flex-shrink: 0;
 }
 
-/* ========== 加载动画 Spinner（CSS 替代 SVG） ========== */
-.loading-spinner {
-    width: 366px;
-    height: 366px;
+/* ========== 顶部标题栏装饰条（VSCode 风格，纯 CSS 伪元素） ========== */
+.loading-page-canvas::before {
+    content: '';
     position: absolute;
-    left: 777px;
-    top: 273px;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 48px;
+    background-color: var(--vs-titlebar-bg);
+    border-bottom: 1px solid var(--vs-widget-border);
+    pointer-events: none;
+}
+
+.loading-page-canvas::after {
+    content: '';
+    position: absolute;
+    top: 19px;
+    left: 20px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
-    background: conic-gradient(from 174deg at 50% 50%, #000 0%, transparent 25.5%, #000 100%);
-    -webkit-mask: radial-gradient(
-        circle,
-        transparent 153px,
-        #fff 154px,
-        #fff 182px,
-        transparent 183px
+    background-color: var(--vs-button-bg);
+    box-shadow:
+        18px 0 0 0 var(--vs-input-border),
+        36px 0 0 0 var(--vs-input-border);
+    pointer-events: none;
+}
+
+/* ========== 加载动画 Spinner（VS 主题蓝环） ========== */
+.loading-spinner {
+    width: 120px;
+    height: 120px;
+    position: absolute;
+    left: calc(50% - 60px);
+    top: 432px;
+    border-radius: 50%;
+    background: conic-gradient(
+        from 0deg,
+        var(--vs-button-bg) 0deg,
+        var(--vs-button-bg) 40deg,
+        transparent 200deg,
+        transparent 360deg
     );
-    mask: radial-gradient(circle, transparent 153px, #fff 154px, #fff 182px, transparent 183px);
+    -webkit-mask: radial-gradient(circle, transparent 56px, #000 56px, #000 60px, transparent 60px);
+    mask: radial-gradient(circle, transparent 56px, #000 56px, #000 60px, transparent 60px);
     animation: loading-spin 2s linear infinite;
 }
 
@@ -50,18 +79,57 @@
 
 /* ========== 加载文字 ========== */
 .loading-text {
-    font-size: 72px;
+    position: absolute;
+    left: 50%;
+    top: 592px;
+    transform: translateX(-50%);
+    margin: 0;
+    font-size: 24px;
     font-family: 'Noto Sans SC';
     font-weight: 400;
-    text-align: left;
-    letter-spacing: 0px;
-    text-decoration: none;
-    color: rgba(0, 0, 0, 1);
-    position: absolute;
-    left: 834px;
-    top: 706px;
+    letter-spacing: 2px;
+    text-align: center;
+    color: var(--vs-foreground);
     white-space: pre;
     mix-blend-mode: normal;
+}
+
+/* ========== 进度条（VSCode 风格不确定进度） ========== */
+.loading-progress {
+    position: absolute;
+    left: calc(50% - 100px);
+    top: 660px;
+    width: 200px;
+    height: 3px;
+    background-color: rgba(14, 112, 192, 0.12);
+    overflow: hidden;
+    border-radius: 1px;
+}
+
+.loading-progress::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 40%;
+    background-color: var(--vs-progress-bg);
+    border-radius: 1px;
+    animation: loading-progress-slide 1.6s ease-in-out infinite;
+}
+
+@keyframes loading-progress-slide {
+    0% {
+        left: -40%;
+        width: 30%;
+    }
+    50% {
+        width: 55%;
+    }
+    100% {
+        left: 100%;
+        width: 30%;
+    }
 }
 
 /* ========== 调试按钮定位容器 ========== */

@@ -22,6 +22,8 @@ const DOT_SCREEN_SIZE = 4
 
 /** 结构体卡片节点数据：对应 struct_mesh_leaf.svg 中的 struct/enum/union 卡片 */
 export interface StructNodeData {
+    /** 结构体唯一标识（= 画布节点 id，与红黑树键一致）：供侧边栏控制选中元素显隐 */
+    hash: string
     /** 卡片标题，如 'struct mesh_leaf (b0e19e)' */
     title: string
     /** 元素种类，决定标题栏颜色 */
@@ -233,7 +235,10 @@ export function useCanvasView(): CanvasViewApi {
         }
         let data: StructNodeData
         try {
-            data = JSON.parse(record.ui_json) as StructNodeData
+            // ui_json 由主进程转化生成、不含完整 hash（标题内仅为 6 位短 hash）；
+            // 以 record.hash（= 节点 id）补齐 data.hash，保证与 canvasNodeIds 一致，供侧边栏控制选中元素显隐
+            const parsed = JSON.parse(record.ui_json) as Omit<StructNodeData, 'hash'>
+            data = { ...parsed, hash: record.hash }
         } catch (err) {
             console.error('[canvas] 解析节点 ui_json 失败:', err)
             return

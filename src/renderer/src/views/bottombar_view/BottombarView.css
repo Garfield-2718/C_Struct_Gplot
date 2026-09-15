@@ -7,10 +7,10 @@
     flex-direction: column;
     align-items: stretch;
     padding: 4px;
-    background-color: #fdfdfd;
-    border: 1px solid #e0e0e0;
+    background-color: var(--vs-widget-bg);
+    border: 1px solid var(--vs-widget-border);
     border-radius: 6px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--vs-shadow);
     transform: translateX(-50%);
     user-select: none;
 }
@@ -27,18 +27,18 @@
     border-bottom: 1px solid transparent;
     border-radius: 4px 4px 0 0;
     background: transparent;
-    color: #666666;
+    color: var(--vs-foreground);
     cursor: pointer;
 }
 
 /* 展开态下手柄与按键组之间显示分隔线，收起态隐藏避免出现多余横线 */
 .bottombar-panel:not(.is-collapsed) .bottombar-collapse-handle {
-    border-bottom-color: #e0e0e0;
+    border-bottom-color: var(--vs-widget-border);
 }
 
 .bottombar-collapse-handle:hover {
-    background-color: #f0f4f8;
-    color: #333333;
+    background-color: var(--vs-list-hover-bg);
+    color: var(--vs-title-foreground);
 }
 
 /* 指向三角：纯 CSS 边框绘制，展开态向下（点击收起），收起态旋转 180° 向上（点击展开） */
@@ -99,16 +99,16 @@
     font-family: inherit;
     font-size: 13px;
     line-height: 20px;
-    color: #666666;
+    color: var(--vs-foreground);
     cursor: pointer;
 }
 
 .bottombar-tool-button:hover {
-    background-color: #f0f4f8;
+    background-color: var(--vs-list-hover-bg);
 }
 
 .bottombar-tool-button:active {
-    background-color: #e2ebf5;
+    background-color: var(--vs-list-inactive-selection-bg);
 }
 
 /* ========== 添加节点对话框：Teleport 至 body，全屏半透明遮罩 + 居中面板 ========== */
@@ -119,7 +119,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: rgba(0, 0, 0, 0.35);
+    background-color: var(--vs-overlay-bg);
 }
 
 /* 对话框面板：配色与底边栏保持一致，纵向排列标题/输入框/操作区 */
@@ -130,10 +130,10 @@
     box-sizing: border-box;
     width: 320px;
     padding: 20px;
-    background-color: #fdfdfd;
-    border: 1px solid #e0e0e0;
+    background-color: var(--vs-editor-bg);
+    border: 1px solid var(--vs-widget-border);
     border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--vs-shadow-heavy);
     user-select: none;
 }
 
@@ -141,7 +141,7 @@
     font-size: 15px;
     font-weight: 600;
     line-height: 22px;
-    color: #333333;
+    color: var(--vs-title-foreground);
 }
 
 /* 节点内容输入框：底层以字符串保存，聚焦时高亮边框 */
@@ -149,19 +149,19 @@
     box-sizing: border-box;
     width: 100%;
     padding: 8px 10px;
-    background-color: #ffffff;
-    border: 1px solid #e0e0e0;
+    background-color: var(--vs-editor-bg);
+    border: 1px solid var(--vs-input-border);
     border-radius: 4px;
     font-family: inherit;
     font-size: 13px;
     line-height: 20px;
-    color: #333333;
+    color: var(--vs-title-foreground);
     outline: none;
 }
 
 .add-node-input:focus {
-    border-color: #7aa7d9;
-    box-shadow: 0 0 0 2px rgba(122, 167, 217, 0.2);
+    border-color: var(--vs-focus-border);
+    box-shadow: 0 0 0 2px rgba(0, 144, 241, 0.2);
 }
 
 /* 操作区：确认/取消按键右对齐并列排放 */
@@ -173,37 +173,37 @@
 
 .add-node-button {
     padding: 6px 16px;
-    background-color: #ffffff;
-    border: 1px solid #e0e0e0;
+    background-color: var(--vs-button-secondary-bg);
+    border: 1px solid var(--vs-widget-border);
     border-radius: 4px;
     font-family: inherit;
     font-size: 13px;
     line-height: 20px;
-    color: #666666;
+    color: var(--vs-button-secondary-fg);
     cursor: pointer;
 }
 
 .add-node-button:hover {
-    background-color: #f0f4f8;
+    background-color: var(--vs-list-hover-bg);
 }
 
 .add-node-button:active {
-    background-color: #e2ebf5;
+    background-color: var(--vs-list-inactive-selection-bg);
 }
 
 /* 主操作按键（确认）：柔和蓝强调，与输入框聚焦色呼应 */
 .add-node-button-primary {
-    background-color: #7aa7d9;
-    border-color: #7aa7d9;
-    color: #ffffff;
+    background-color: var(--vs-button-bg);
+    border-color: var(--vs-button-bg);
+    color: var(--vs-button-fg);
 }
 
 .add-node-button-primary:hover {
-    background-color: #6a97c9;
-    border-color: #6a97c9;
+    background-color: var(--vs-button-hover-bg);
+    border-color: var(--vs-button-hover-bg);
 }
 
 .add-node-button-primary:active {
-    background-color: #5c88b8;
-    border-color: #5c88b8;
+    background-color: var(--vs-button-hover-bg);
+    border-color: var(--vs-button-hover-bg);
 }

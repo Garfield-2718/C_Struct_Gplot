@@ -7,8 +7,8 @@
     flex-direction: column;
     width: var(--sidebar-width);
     height: calc(100% - var(--topbar-height, 0px));
-    background-color: #fdfdfd;
-    box-shadow: 2px 0 6px rgba(0, 0, 0, 0.15);
+    background-color: var(--vs-sidebar-bg);
+    box-shadow: 2px 0 6px rgba(0, 0, 0, 0.08);
     user-select: none;
 }
 
@@ -16,10 +16,10 @@
 .sidebar-content {
     flex: 1;
     overflow-y: auto;
-    color: #333333;
+    color: var(--vs-title-foreground);
 }
 
-/* ========== 分段：标题栏（点击折叠）+ 定高内容区（可滚动）+ 底边框拖拽条 ========== */
+/* ========== 分段：标题栏（点击折叠）+ 内容自适应内容区（max-height 封顶、可滚动）+ 底边框拖拽条 ========== */
 .sidebar-section {
     display: flex;
     flex-direction: column;
@@ -32,12 +32,12 @@
     align-items: center;
     gap: 8px;
     padding: 8px 12px;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--vs-sidebar-section-border);
     cursor: pointer;
 }
 
 .sidebar-section-header:hover {
-    background-color: #f0f4f8;
+    background-color: var(--vs-list-hover-bg);
 }
 
 /* 折叠箭头：展开时指向下，折叠时旋转指向右 */
@@ -45,8 +45,8 @@
     flex-shrink: 0;
     width: 6px;
     height: 6px;
-    border-right: 1.5px solid #666666;
-    border-bottom: 1.5px solid #666666;
+    border-right: 1.5px solid var(--vs-foreground);
+    border-bottom: 1.5px solid var(--vs-foreground);
     transform: rotate(45deg);
     transition: transform 0.15s ease;
 }
@@ -59,26 +59,27 @@
     margin: 0;
     font-size: 13px;
     font-weight: 600;
-    color: #666666;
+    color: var(--vs-foreground);
 }
 
-/* ========== 分段内容区：高度由拖拽控制，超出滚动 ========== */
+/* ========== 分段内容区：高度随内容自适应，但以拖拽设定的 max-height 封顶，超出滚动 ========== */
+/* 内容短于上限时按内容收缩（不留白），拖大仅提高上限；行文本换行时行高自动撑高 */
 .sidebar-section-body {
     overflow-y: auto;
     padding: 4px 0;
 }
 
-/* 各段高度引用根节点 CSS 变量，由拖拽动态更新 */
+/* 各段 max-height 引用根节点 CSS 变量，由底边框拖拽动态更新 */
 .sidebar-section-body--element-info {
-    height: var(--element-info-height);
+    max-height: var(--element-info-height);
 }
 
 .sidebar-section-body--parent-nodes {
-    height: var(--parent-nodes-height);
+    max-height: var(--parent-nodes-height);
 }
 
 .sidebar-section-body--child-nodes {
-    height: var(--child-nodes-height);
+    max-height: var(--child-nodes-height);
 }
 
 /* ========== 列表通用：去除默认样式，每项占一行 ========== */
@@ -89,9 +90,10 @@
     list-style: none;
 }
 
-/* ========== 元素信息行：键值对布局 ========== */
+/* ========== 元素信息行：键值对布局，值过长时自动换行并撑高本行，key 与首行顶部对齐 ========== */
 .sidebar-info-row {
     display: flex;
+    align-items: flex-start;
     gap: 8px;
     padding: 4px 12px;
     font-size: 12px;
@@ -101,32 +103,21 @@
 .sidebar-info-key {
     flex-shrink: 0;
     width: 56px;
-    color: #999999;
+    color: var(--vs-description-foreground);
 }
 
 .sidebar-info-value {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-/* ========== 长文本行（如源文件路径）：值自动换行并撑高本行，key 与首行顶部对齐 ========== */
-.sidebar-info-row--wrap {
-    align-items: flex-start;
-}
-
-.sidebar-info-row--wrap .sidebar-info-value {
     flex: 1;
     min-width: 0;
-    overflow: visible;
     white-space: normal;
-    word-break: break-all;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
-/* ========== 节点信息行：行侧类 PS 显隐按键 + 节点名称 ========== */
+/* ========== 节点信息行：行侧类 PS 显隐按键 + 节点名称，名称过长时自动换行并撑高本行 ========== */
 .sidebar-node-row {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 8px;
     padding: 4px 12px;
     font-size: 12px;
@@ -134,19 +125,20 @@
 }
 
 .sidebar-node-row:hover {
-    background-color: #f0f4f8;
+    background-color: var(--vs-list-hover-bg);
 }
 
 .sidebar-node-label {
     flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 /* 行隐藏后文本变淡，提示当前不可见 */
 .sidebar-node-row.is-hidden .sidebar-node-label {
-    color: #bbbbbb;
+    color: var(--vs-disabled-foreground);
 }
 
 /* ========== 显隐按键：眼睛图标，点击切换行可见状态 ========== */
@@ -160,12 +152,12 @@
     padding: 0;
     border: none;
     background: transparent;
-    color: #666666;
+    color: var(--vs-foreground);
     cursor: pointer;
 }
 
 .sidebar-visibility-toggle.is-off {
-    color: #cccccc;
+    color: var(--vs-input-border);
 }
 
 /* 眼睛图标：45° 旋转的圆角矩形模拟眼眶轮廓，::before 为瞳孔 */
@@ -203,34 +195,34 @@
     transform: translateY(-50%);
 }
 
-/* ========== 分段底边框拖拽条：光标提示可纵向拖动调节高度 ========== */
+/* ========== 分段底边框拖拽条：光标提示可纵向拖动调节内容区 max-height 上限 ========== */
 .sidebar-section-resizer {
     flex-shrink: 0;
     height: 5px;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--vs-widget-border);
     cursor: row-resize;
 }
 
 /* 悬停/拖动时高亮边框，反馈当前调节的边界 */
 .sidebar-section-resizer:hover,
 .sidebar-section-resizer:active {
-    border-bottom-color: rgba(33, 150, 243, 0.6);
-    background-color: rgba(33, 150, 243, 0.15);
+    border-bottom-color: var(--vs-focus-border);
+    background-color: rgba(0, 144, 241, 0.15);
 }
 
-/* ========== 分段折叠/展开过渡：内容区与拖拽条高度、内边距收缩到 0 ========== */
-/* 需置于内容区/拖拽条规则之后，同优先级下以覆盖其高度与内边距 */
+/* ========== 分段折叠/展开过渡：内容区 max-height 与内边距收缩到 0 ========== */
+/* 需置于内容区规则之后，同优先级下以覆盖其 max-height 与内边距 */
 .sidebar-collapse-enter-active,
 .sidebar-collapse-leave-active {
     overflow: hidden;
     transition:
-        height 0.2s ease,
+        max-height 0.2s ease,
         padding 0.2s ease;
 }
 
 .sidebar-collapse-enter-from,
 .sidebar-collapse-leave-to {
-    height: 0;
+    max-height: 0;
     padding-top: 0;
     padding-bottom: 0;
 }
@@ -248,5 +240,5 @@
 /* 手柄悬停/拖动时高亮中缝，反馈当前调节的边界 */
 .sidebar-resize-handle:hover,
 .sidebar-resize-handle:active {
-    background-color: rgba(33, 150, 243, 0.35);
+    background-color: rgba(0, 144, 241, 0.35);
 }

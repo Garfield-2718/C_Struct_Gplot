@@ -12,9 +12,9 @@
     box-sizing: border-box;
     height: var(--topbar-height, 44px);
     padding: 0 8px;
-    background-color: #f0f0f0;
-    border-bottom: 1px solid #e0e0e0;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    background-color: var(--vs-titlebar-bg);
+    border-bottom: 1px solid var(--vs-widget-border);
+    box-shadow: var(--vs-shadow);
     user-select: none;
 }
 
@@ -27,14 +27,14 @@
     font-family: inherit;
     font-size: 13px;
     line-height: 20px;
-    color: #666666;
+    color: var(--vs-foreground);
     cursor: pointer;
 }
 
 .topbar-tool-button:hover {
-    background-color: #f0f4f8;
+    background-color: var(--vs-list-hover-bg);
 }
 
 .topbar-tool-button:active {
-    background-color: #e2ebf5;
+    background-color: var(--vs-list-inactive-selection-bg);
 }
