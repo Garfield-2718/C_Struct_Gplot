@@ -1,15 +1,22 @@
 <template>
-    <div class="canvas-wrapper">
+    <div class="canvas-wrapper" :class="{ 'canvas-edit-mode': isEditMode }">
         <VueFlow
             v-model:nodes="nodes"
             v-model:edges="edges"
             class="node-editor"
             :node-types="nodeTypes"
+            :edge-types="edgeTypes"
             :min-zoom="0.1"
             :max-zoom="5"
             :fit-view-on-init="true"
             :fit-view-options="{ padding: 0.3 }"
+            :edges-updatable="isEditMode"
+            :nodes-connectable="isEditMode"
+            :edges-selectable="isEditMode"
+            :delete-key-code="null"
             @viewport-change="handleViewportChange"
+            @edge-update="handleEdgeUpdate"
+            @connect="handleConnect"
         >
             <Background variant="dots" :gap="backgroundGap" :size="dotSize" />
             <!-- 缩放控件改放右下角：顶部已被横贯的顶边栏 bar 占用，避免遮挡 -->
@@ -25,7 +32,11 @@
             @show-node="addStructNode"
             @hide-node="removeStructNode"
         />
-        <BottombarView @node-added="addStructNode" />
+        <BottombarView
+            :mode="canvasMode"
+            @node-added="addStructNode"
+            @toggle-mode="toggleCanvasMode"
+        />
     </div>
 </template>
 
@@ -46,12 +57,18 @@ const {
     nodes,
     edges,
     nodeTypes,
+    edgeTypes,
     backgroundGap,
     dotSize,
     handleViewportChange,
+    handleEdgeUpdate,
+    handleConnect,
     addStructNode,
     removeStructNode,
     selectedNodeData,
-    canvasNodeIds
+    canvasNodeIds,
+    canvasMode,
+    toggleCanvasMode,
+    isEditMode
 } = useCanvasView()
 </script>

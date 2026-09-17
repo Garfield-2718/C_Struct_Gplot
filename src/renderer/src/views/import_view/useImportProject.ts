@@ -4,6 +4,13 @@ import { useRouter } from 'vue-router'
 const DESIGN_WIDTH = 1920
 const DESIGN_HEIGHT = 1080
 
+/** import-db-file 通道返回结构，与主进程 ipc-handlers.ts 对齐 */
+interface ImportDbResult {
+    status: 'success' | 'failure'
+    message?: string
+    dbPath?: string
+}
+
 /** 导入项目页的组合式函数：画布自适应缩放 + 文件选择/拖入 */
 export function useImportProject() {
     const canvasWrapper = ref<HTMLElement | null>(null)
@@ -12,6 +19,23 @@ export function useImportProject() {
     let lastDropTime = 0
     let observer: ResizeObserver | null = null
     const router = useRouter()
+
+    /** 错误提示弹窗状态：校验/导入失败时展示具体原因 */
+    const errorVisible = ref(false)
+    const errorTitle = ref('操作失败')
+    const errorMessage = ref('')
+
+    /** 弹出错误提示：记录标题与详情并显示弹窗 */
+    function showError(title: string, message: string): void {
+        errorTitle.value = title
+        errorMessage.value = message
+        errorVisible.value = true
+    }
+
+    /** 关闭错误提示弹窗 */
+    function handleDismissError(): void {
+        errorVisible.value = false
+    }
 
     function updateScale(): void {
         if (!canvasWrapper.value) return
@@ -56,6 +80,28 @@ export function useImportProject() {
         }
     }
 
+    /**
+     * 导入已有数据库：打开 .db 文件选择对话框，选中后交由主进程校验并设为活动库。
+     * 成功则直接进入画布页（无需 CLI 解析，故不经过 loading 页），失败则留在本页并打印原因。
+     */
+    async function handleSelectDb(): Promise<void> {
+        const dbPath = await window.electron.ipcRenderer.invoke('select-db-file')
+        if (!dbPath) {
+            console.log('[DbSelect] Cancelled')
+            return
+        }
+        console.log('[DbSelect] Selected:', dbPath)
+        const result = (await window.electron.ipcRenderer.invoke('import-db-file', dbPath)) as
+            ImportDbResult | undefined
+        if (result?.status === 'success') {
+            console.log('[DbSelect] 导入成功，活动数据库:', result.dbPath)
+            router.push('/canvas')
+        } else {
+            console.error('[DbSelect] 导入失败:', result?.message)
+            showError('导入数据库失败', result?.message ?? '未知错误')
+        }
+    }
+
     function handleDrop(event: DragEvent): void {
         isDragOver.value = false
         lastDropTime = Date.now()
@@ -69,16 +115,16 @@ export function useImportProject() {
         console.log('[FileDrop] Dropped:', filePath)
     }
 
-    function handleNavigateToLoading(): void {
-        router.push('/loading')
-    }
-
     return {
         canvasWrapper,
         scale,
         isDragOver,
         handleSelectFile,
+        handleSelectDb,
         handleDrop,
-        handleNavigateToLoading
+        errorVisible,
+        errorTitle,
+        errorMessage,
+        handleDismissError
     }
 }

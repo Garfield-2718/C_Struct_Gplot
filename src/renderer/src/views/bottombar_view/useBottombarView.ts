@@ -12,7 +12,7 @@ interface AddNodeResult {
 interface BottombarViewApi {
     collapsed: Ref<boolean>
     handleToggleCollapse: () => void
-    handleSelectModeClick: () => void
+    handleModeToggleClick: () => void
     handleAddNodeClick: () => void
     /** 「添加节点」对话框是否可见 */
     isAddNodeDialogVisible: Ref<boolean>
@@ -28,10 +28,12 @@ interface BottombarViewApi {
  * 底边栏的组合式函数：工具栏按键与收起/展开状态的处理。
  * @param addNodeInputRef 对话框输入框引用（由组件用本地 ref 声明并绑定到模板，供打开时自动聚焦）
  * @param onNodeAdded 新增节点成功并查询到节点信息后的回调，用于把记录交给画布渲染
+ * @param onToggleMode 模式切换按键点击的回调，上报「选择 ⇄ 编辑」切换意图（模式状态由画布持有）
  */
 export function useBottombarView(
     addNodeInputRef: Ref<HTMLInputElement | null>,
-    onNodeAdded?: (record: StructNodeRecord) => void
+    onNodeAdded?: (record: StructNodeRecord) => void,
+    onToggleMode?: () => void
 ): BottombarViewApi {
     /** 底边栏是否收起：收起后仅保留顶部的三角手柄 */
     const collapsed = ref(false)
@@ -47,10 +49,12 @@ export function useBottombarView(
         collapsed.value = !collapsed.value
     }
 
-    /** 选择模式按键点击的触发逻辑（打桩）：后续在此实现实际业务，如把画布切换为选择模式 */
-    function handleSelectModeClick(): void {
-        // TODO: 替换打桩实现，联动画布切换到选择模式
-        console.log('[bottombar] 点击选择模式按键')
+    /**
+     * 模式切换按键点击：在「选择模式 ⇄ 编辑模式」间切换。
+     * 实际模式状态由画布（useCanvasView）持有，这里仅通过 onToggleMode 上报切换意图。
+     */
+    function handleModeToggleClick(): void {
+        onToggleMode?.()
     }
 
     /** 添加节点按键点击：弹出对话框让用户输入要新增的节点 */
@@ -105,7 +109,7 @@ export function useBottombarView(
     return {
         collapsed,
         handleToggleCollapse,
-        handleSelectModeClick,
+        handleModeToggleClick,
         handleAddNodeClick,
         isAddNodeDialogVisible,
         newNodeName,

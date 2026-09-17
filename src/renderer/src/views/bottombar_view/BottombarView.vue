@@ -10,14 +10,21 @@
         </button>
         <div class="bottombar-tools-wrapper">
             <div class="bottombar-tools">
-                <!-- 工具按键：设计文档规划为 选择模式/添加节点/拖动模式/导出，当前放置前两个 -->
+                <!-- 模式切换（两态按键）：在「选择模式 ⇄ 编辑模式」间切换，文字与高亮随当前模式变化 -->
                 <button
                     class="bottombar-tool-button"
-                    title="选择模式"
-                    @click="handleSelectModeClick"
+                    :class="{ 'bottombar-tool-button-active': mode === 'edit' }"
+                    :title="
+                        mode === 'edit'
+                            ? '当前：编辑模式（点击切回选择模式）'
+                            : '当前：选择模式（点击进入编辑模式）'
+                    "
+                    :aria-pressed="mode === 'edit'"
+                    @click="handleModeToggleClick"
                 >
-                    选择模式
+                    {{ mode === 'edit' ? '编辑模式' : '选择模式' }}
                 </button>
+                <!-- 其余工具按键：设计文档另规划 添加节点/拖动模式/导出，当前放置添加节点 -->
                 <button class="bottombar-tool-button" title="添加节点" @click="handleAddNodeClick">
                     添加节点
                 </button>
@@ -60,11 +67,17 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
 import { useBottombarView } from './useBottombarView'
-import type { StructNodeRecord } from '@/views/canvas_view/useCanvasView'
+import type { StructNodeRecord, CanvasMode } from '@/views/canvas_view/useCanvasView'
 import './BottombarView.css'
 
-/** 向父级 CanvasView 上报查询到的结构体记录，由其渲染到画布 */
-const emit = defineEmits<{ (e: 'node-added', record: StructNodeRecord): void }>()
+/** 当前画布交互模式：由画布（useCanvasView）持有并经 CanvasView 下发，用于渲染两态按键 */
+defineProps<{ mode: CanvasMode }>()
+
+/** 向父级 CanvasView 上报：查询到的结构体记录（渲染到画布）、模式切换意图（选择 ⇄ 编辑） */
+const emit = defineEmits<{
+    (e: 'node-added', record: StructNodeRecord): void
+    (e: 'toggle-mode'): void
+}>()
 
 /** 对话框输入框引用：本地声明并绑定到模板 ref，交由组合式函数在打开时聚焦 */
 const addNodeInputRef = ref<HTMLInputElement | null>(null)
@@ -72,11 +85,15 @@ const addNodeInputRef = ref<HTMLInputElement | null>(null)
 const {
     collapsed,
     handleToggleCollapse,
-    handleSelectModeClick,
+    handleModeToggleClick,
     handleAddNodeClick,
     isAddNodeDialogVisible,
     newNodeName,
     handleAddNodeConfirm,
     handleAddNodeCancel
-} = useBottombarView(addNodeInputRef, (record) => emit('node-added', record))
+} = useBottombarView(
+    addNodeInputRef,
+    (record) => emit('node-added', record),
+    () => emit('toggle-mode')
+)
 </script>

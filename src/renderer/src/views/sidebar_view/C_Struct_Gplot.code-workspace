@@ -7,5 +7,7 @@
             "path": "../../../../../../C_Struct_Gplot_CLI"
         }
     ],
-    "settings": {}
+    "settings": {
+        "python.languageServer": "None"
+    }
 }

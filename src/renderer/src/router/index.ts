@@ -14,12 +14,6 @@ const routes: RouteRecordRaw[] = [
         meta: { guid: '3:40' }
     },
     {
-        path: '/debug-button',
-        name: 'DebugButton',
-        component: () => import('@/views/debug_button/DebugButton.vue'),
-        meta: { guid: '11:51' }
-    },
-    {
         path: '/canvas',
         name: 'Canvas',
         component: () => import('@/views/canvas_view/CanvasView.vue'),

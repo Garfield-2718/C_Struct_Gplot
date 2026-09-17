@@ -35,9 +35,108 @@ export function resolveDefaultDbDir(): string {
 }
 
 /**
- * 定位待查询的数据库文件：显式传入的 explicitPath 优先；
- * 否则在默认目录中查找唯一的 .db 文件。目录缺失、无 .db 或存在多个 .db
- * （无法确定目标）时抛出带诊断信息的错误，交由调用方处理。
+ * 会话级「当前活动数据库」路径：由「导入项目」（CLI 生成后）或「导入已有 .db」设置。
+ * 各查询通道统一通过 resolveDbPath() 解析，未显式传参时优先采用此路径，
+ * 从而在默认目录存在多个 .db 时仍能确定目标；进程重启后失效（内存态）。
+ */
+let activeDbPath: string | null = null
+
+/** 设置会话级当前活动数据库路径（导入项目 / 导入已有 .db 成功后调用） */
+export function setActiveDbPath(dbPath: string): void {
+    activeDbPath = dbPath
+}
+
+/** 读取会话级当前活动数据库路径；未设置时返回 null */
+export function getActiveDbPath(): string | null {
+    return activeDbPath
+}
+
+/** 数据库结构校验结果：ok 为是否通过，message 为通过/未通过的具体说明 */
+export interface DbValidationResult {
+    ok: boolean
+    message: string
+}
+
+/**
+ * structures 表必需字段，与 CLI（C_Struct_Gplot_CLI）sqlit3_api.py 的
+ * Structures.TABLE_COLUMNS 保持一致；校验时要求全部存在（允许额外字段）。
+ */
+const STRUCTURES_REQUIRED_COLUMNS = [
+    'id',
+    'salt',
+    'hash',
+    'data_type_first',
+    'data_type_latter',
+    'typedef_names',
+    'content',
+    'ui_json',
+    'source_file',
+    'parent_num',
+    'child_num'
+] as const
+
+/**
+ * relations 表必需字段，与 CLI sqlit3_api.py 的 Relations.TABLE_COLUMNS 保持一致；
+ * 校验时要求全部存在（允许额外字段）。
+ */
+const RELATIONS_REQUIRED_COLUMNS = ['id', 'parent', 'child'] as const
+
+/**
+ * 读取指定表的字段名列表：通过 PRAGMA table_info 获取，表不存在时返回空数组。
+ * table 仅由内部常量传入（structures/relations），不存在 SQL 注入风险。
+ */
+function readTableColumns(db: DatabaseSync, table: string): string[] {
+    const rows = db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>
+    return rows.map((row) => row.name)
+}
+
+/**
+ * 校验指定文件是否为本工具可用的结构体数据库：以只读方式打开，依次确认
+ * structures 与 relations 两表均存在且包含全部必需字段（与 CLI 生成的 schema 对齐）。
+ * 返回 DbValidationResult：任一环节不满足时 ok=false 并在 message 中给出具体原因，
+ * 供「导入已有 .db」在接受文件前做合法性校验并向用户反馈。
+ */
+export function validateStructDb(dbPath: string): DbValidationResult {
+    let db: DatabaseSync
+    try {
+        db = new DatabaseSync(dbPath, { readOnly: true })
+    } catch (err) {
+        return { ok: false, message: `无法作为 SQLite 数据库打开: ${(err as Error).message}` }
+    }
+    try {
+        // 逐表校验：表必须存在（PRAGMA 返回非空）且包含全部必需字段
+        const checks: Array<[string, readonly string[]]> = [
+            ['structures', STRUCTURES_REQUIRED_COLUMNS],
+            ['relations', RELATIONS_REQUIRED_COLUMNS]
+        ]
+        for (const [table, required] of checks) {
+            const actual = readTableColumns(db, table)
+            if (actual.length === 0) {
+                return { ok: false, message: `缺少 ${table} 表` }
+            }
+            const actualSet = new Set(actual)
+            const missing = required.filter((column) => !actualSet.has(column))
+            if (missing.length > 0) {
+                return { ok: false, message: `${table} 表缺少字段: ${missing.join(', ')}` }
+            }
+        }
+        return { ok: true, message: '数据库结构校验通过' }
+    } catch (err) {
+        const reason = (err as Error).message
+        // SQLite 打开为惰性：非数据库文件直到首次查询才报错，此处归一为更清晰的提示
+        if (reason.includes('not a database')) {
+            return { ok: false, message: '文件不是有效的 SQLite 数据库' }
+        }
+        return { ok: false, message: `校验数据库结构时出错: ${reason}` }
+    } finally {
+        db.close()
+    }
+}
+
+/**
+ * 定位待查询的数据库文件：显式传入的 explicitPath 优先；其次是会话级活动库
+ * （导入项目 / 导入已有 .db 后设置）；最后在默认目录中查找唯一的 .db 文件。
+ * 目录缺失、无 .db 或存在多个 .db（无法确定目标）时抛出带诊断信息的错误，交由调用方处理。
  */
 export function resolveDbPath(explicitPath?: string): string {
     const explicit = typeof explicitPath === 'string' ? explicitPath.trim() : ''
@@ -46,6 +145,11 @@ export function resolveDbPath(explicitPath?: string): string {
             throw new Error(`数据库文件不存在: ${explicit}`)
         }
         return explicit
+    }
+    // 会话内已设置活动数据库（导入项目 / 导入已有 .db）时优先采用，
+    // 避免默认目录存在多个 .db 时无法确定目标
+    if (activeDbPath && existsSync(activeDbPath)) {
+        return activeDbPath
     }
     const dir = resolveDefaultDbDir()
     if (!existsSync(dir)) {
@@ -111,13 +215,17 @@ export function findStructRecordsByHash(dbPath: string, hash: string): StructRec
 
 /**
  * 在指定数据库中查询 relations 表，返回引用了指定 child hash 的所有 parent hash。
- * relations 表由 CLI init 模式生成，记录结构体间的父子引用关系（parent→child）。
+ * relations 表由 CLI init 模式生成，记录结构体间的父子引用关系（parent→child）；
+ * CLI 按父结构体的字段数逐行 INSERT，同一 (parent, child) 对可能占多行，
+ * 故查询用 SELECT DISTINCT 在源头去重，避免侧边栏父节点列表出现重复项。
  * 以只读方式打开，查询后立即关闭连接；relations 表不存在时抛出异常，由调用方处理。
  */
 export function findParentHashes(dbPath: string, childHash: string): string[] {
     const db = new DatabaseSync(dbPath, { readOnly: true })
     try {
-        const rows = db.prepare('SELECT parent FROM relations WHERE child = ?').all(childHash)
+        const rows = db
+            .prepare('SELECT DISTINCT parent FROM relations WHERE child = ?')
+            .all(childHash)
         return (rows as Array<{ parent: string }>).map((r) => r.parent)
     } finally {
         db.close()
@@ -126,12 +234,16 @@ export function findParentHashes(dbPath: string, childHash: string): string[] {
 
 /**
  * 在指定数据库中查询 relations 表，返回指定 parent hash 引用的所有 child hash。
+ * 与 findParentHashes 同理：CLI 按字段数逐行 INSERT，同一 (parent, child) 对可能占多行，
+ * 用 SELECT DISTINCT 在源头去重，避免下游消费方拿到重复项。
  * 以只读方式打开，查询后立即关闭连接；relations 表不存在时抛出异常，由调用方处理。
  */
 export function findChildHashes(dbPath: string, parentHash: string): string[] {
     const db = new DatabaseSync(dbPath, { readOnly: true })
     try {
-        const rows = db.prepare('SELECT child FROM relations WHERE parent = ?').all(parentHash)
+        const rows = db
+            .prepare('SELECT DISTINCT child FROM relations WHERE parent = ?')
+            .all(parentHash)
         return (rows as Array<{ child: string }>).map((r) => r.child)
     } finally {
         db.close()

@@ -1,6 +1,0 @@
-<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="32.000000" height="32.000000" fill="none">
-	<rect id="arrow-right-circle" width="32.000000" height="32.000000" x="0.000000" y="0.000000" />
-	<path id="Vector" d="M16 29.3333C8.63621 29.3333 2.66667 23.3638 2.66667 16C2.66667 8.6362 8.63621 2.66666 16 2.66666C23.3638 2.66666 29.3333 8.6362 29.3333 16C29.3333 23.3638 23.3638 29.3333 16 29.3333Z" stroke="rgb(151,71,255)" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.000000" />
-	<path id="Vector" d="M16 21.3333L21.3333 16L16 10.6667" fill-rule="nonzero" stroke="rgb(151,71,255)" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.000000" />
-	<path id="Vector" d="M10.6667 16L21.3333 16" stroke="rgb(151,71,255)" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.000000" />
-</svg>

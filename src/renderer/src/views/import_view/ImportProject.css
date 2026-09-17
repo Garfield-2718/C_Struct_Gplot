@@ -102,12 +102,67 @@
     pointer-events: none;
 }
 
-.imv-debug-slot {
-    position: relative;
-    width: 200px;
-    height: 120px;
-    margin: 24px 0 0 auto;
-    background-color: var(--vs-editor-bg);
+.imv-secondary-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    margin-top: 24px;
+}
+
+.imv-secondary-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    color: var(--vs-description-foreground);
+    font-size: 12px;
+    line-height: 20px;
+}
+
+.imv-secondary-divider::before,
+.imv-secondary-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background-color: var(--vs-widget-border);
+}
+
+.imv-db-picker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    border: 1px solid var(--vs-button-secondary-border);
+    border-radius: 2px;
+    background-color: var(--vs-button-secondary-bg);
+    color: var(--vs-button-secondary-fg);
+    font: inherit;
+    line-height: 22px;
+    cursor: pointer;
+}
+
+.imv-db-picker:hover {
+    background-color: var(--vs-list-hover-bg);
+}
+
+.imv-db-picker:active {
+    background-color: var(--vs-list-inactive-selection-bg);
+}
+
+.imv-db-picker:focus-visible {
+    border-color: var(--vs-focus-border);
+    outline: 2px solid var(--vs-focus-border);
+    outline-offset: -3px;
+}
+
+.imv-db-icon {
+    flex-shrink: 0;
+    pointer-events: none;
+}
+
+.imv-db-label {
+    pointer-events: none;
 }
 
 @media (max-width: 640px) {

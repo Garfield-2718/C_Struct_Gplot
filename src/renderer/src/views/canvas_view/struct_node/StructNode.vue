@@ -1,11 +1,18 @@
 <template>
     <div class="struct-node" :style="{ width: `${data.width}px` }">
         <div class="struct-node-header" :class="`struct-node-header-${headerKind}`">
+            <!-- 标题栏左右各一个入线吸附点：编辑模式下可把连线目标端拖到另一侧 -->
             <Handle
-                id="header"
+                id="header-left"
                 type="target"
                 :position="Position.Left"
                 class="struct-node-target-handle"
+            />
+            <Handle
+                id="header-right"
+                type="target"
+                :position="Position.Right"
+                class="struct-node-target-handle struct-node-target-handle-right"
             />
             <span class="struct-node-title">{{ data.title }}</span>
         </div>
@@ -19,8 +26,15 @@
                 class="struct-node-row"
                 :class="{ 'struct-node-row-striped': index % 2 === 0 }"
             >
+                <!-- 字段行左右各一个出线吸附点：编辑模式下可把连线源端拖到另一侧 -->
                 <Handle
-                    :id="`field-${index}`"
+                    :id="`field-${index}-left`"
+                    type="source"
+                    :position="Position.Left"
+                    class="struct-node-source-handle"
+                />
+                <Handle
+                    :id="`field-${index}-right`"
                     type="source"
                     :position="Position.Right"
                     class="struct-node-source-handle"

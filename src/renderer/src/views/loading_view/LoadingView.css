@@ -83,14 +83,6 @@
     }
 }
 
-.ldv-debug-slot {
-    position: relative;
-    width: 200px;
-    height: 120px;
-    margin: 24px 0 0 auto;
-    background-color: var(--vs-editor-bg);
-}
-
 @media (max-width: 640px) {
     .ldv-titlebar {
         padding: 0 16px;

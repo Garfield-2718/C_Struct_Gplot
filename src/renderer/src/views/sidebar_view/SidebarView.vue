@@ -27,7 +27,7 @@
                 </header>
                 <Transition name="sidebar-collapse">
                     <div
-                        v-show="!sectionStates.elementInfo.collapsed"
+                        v-show="!sectionStates.elementInfo.collapsed && elementInfoRows.length > 0"
                         class="sidebar-section-body sidebar-section-body--element-info"
                     >
                         <ul class="sidebar-info-list">
@@ -54,7 +54,7 @@
                 </Transition>
                 <Transition name="sidebar-collapse">
                     <div
-                        v-show="!sectionStates.elementInfo.collapsed"
+                        v-show="!sectionStates.elementInfo.collapsed && elementInfoRows.length > 0"
                         class="sidebar-section-resizer"
                         title="拖动调节高度"
                         @mousedown="handleStartResizeSection(sectionStates.elementInfo, $event)"
@@ -78,7 +78,7 @@
                 </header>
                 <Transition name="sidebar-collapse">
                     <div
-                        v-show="!sectionStates.parentNodes.collapsed"
+                        v-show="!sectionStates.parentNodes.collapsed && parentNodes.length > 0"
                         class="sidebar-section-body sidebar-section-body--parent-nodes"
                     >
                         <ul class="sidebar-node-list">
@@ -107,7 +107,7 @@
                 </Transition>
                 <Transition name="sidebar-collapse">
                     <div
-                        v-show="!sectionStates.parentNodes.collapsed"
+                        v-show="!sectionStates.parentNodes.collapsed && parentNodes.length > 0"
                         class="sidebar-section-resizer"
                         title="拖动调节高度"
                         @mousedown="handleStartResizeSection(sectionStates.parentNodes, $event)"
@@ -131,7 +131,7 @@
                 </header>
                 <Transition name="sidebar-collapse">
                     <div
-                        v-show="!sectionStates.childNodes.collapsed"
+                        v-show="!sectionStates.childNodes.collapsed && childNodes.length > 0"
                         class="sidebar-section-body sidebar-section-body--child-nodes"
                     >
                         <ul class="sidebar-node-list">
@@ -160,7 +160,7 @@
                 </Transition>
                 <Transition name="sidebar-collapse">
                     <div
-                        v-show="!sectionStates.childNodes.collapsed"
+                        v-show="!sectionStates.childNodes.collapsed && childNodes.length > 0"
                         class="sidebar-section-resizer"
                         title="拖动调节高度"
                         @mousedown="handleStartResizeSection(sectionStates.childNodes, $event)"

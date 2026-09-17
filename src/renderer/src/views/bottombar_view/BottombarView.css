@@ -115,6 +115,14 @@
     background-color: var(--vs-list-inactive-selection-bg);
 }
 
+/* ========== 模式切换按键「编辑模式」选中态：实心强调底色，明确指示当前所处模式 ========== */
+.bottombar-panel .bottombar-tool-button-active,
+.bottombar-panel .bottombar-tool-button-active:hover,
+.bottombar-panel .bottombar-tool-button-active:active {
+    background-color: var(--vs-list-active-selection-bg);
+    color: var(--vs-list-active-selection-fg);
+}
+
 .bottombar-panel .bottombar-collapse-handle:focus-visible,
 .bottombar-panel .bottombar-tool-button:focus-visible {
     outline: 1px solid var(--vs-focus-border);

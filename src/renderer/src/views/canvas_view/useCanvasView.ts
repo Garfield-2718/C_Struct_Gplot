@@ -1,8 +1,18 @@
-import { ref, watch, nextTick, markRaw, computed } from 'vue'
+import { ref, watch, markRaw, computed, onMounted, onBeforeUnmount } from 'vue'
 import type { Ref, ComputedRef } from 'vue'
-import { useVueFlow } from '@vue-flow/core'
-import type { Edge, GraphNode, Node, NodeTypesObject, ViewportTransform } from '@vue-flow/core'
+import type {
+    Connection,
+    Edge,
+    EdgeTypesObject,
+    EdgeUpdateEvent,
+    GraphEdge,
+    GraphNode,
+    Node,
+    NodeTypesObject,
+    ViewportTransform
+} from '@vue-flow/core'
 import StructNode from './struct_node/StructNode.vue'
+import FlowArrowEdge from './flow_arrow_edge/FlowArrowEdge.vue'
 
 /**
  * 自定义节点类型注册：struct 卡片节点。
@@ -12,6 +22,12 @@ import StructNode from './struct_node/StructNode.vue'
  */
 const nodeTypes: NodeTypesObject = { struct: markRaw(StructNode) }
 
+/**
+ * 自定义连线类型注册：flowArrow —— 选中结构体时高亮其父/子连线，
+ * 用「沿路径从起点流动到终点的箭头」取代吸附在节点上的静态箭头；同样用 markRaw 避免被响应式代理。
+ */
+const edgeTypes: EdgeTypesObject = { flowArrow: markRaw(FlowArrowEdge) }
+
 /** 点阵间距在屏幕上允许的范围（px），超出后回绕到另一端 */
 const MIN_SCREEN_GAP = 30
 const MAX_SCREEN_GAP = 40
@@ -19,6 +35,14 @@ const MAX_SCREEN_GAP = 40
 const GAP_WRAP_RATIO = MAX_SCREEN_GAP / MIN_SCREEN_GAP
 /** 点在屏幕上的恒定直径（px）：防止缩小时点变成亚像素被抗锯齿糊成灰色 */
 const DOT_SCREEN_SIZE = 4
+
+/**
+ * 画布交互模式：
+ * - 'select' 选择模式（默认）：仅选中/查看节点，连线吸附点锁定不可调整
+ * - 'edit'   编辑模式：开放「调整连线在节点左/右侧的吸附点」等编辑能力（后续接入）
+ * 状态由画布（本组合式函数）持有，底边栏两态按键经 CanvasView 下发切换意图。
+ */
+export type CanvasMode = 'select' | 'edit'
 
 /** 结构体卡片节点数据：对应 struct_mesh_leaf.svg 中的 struct/enum/union 卡片 */
 export interface StructNodeData {
@@ -67,14 +91,17 @@ function createStructNode(id: string, x: number, y: number, data: StructNodeData
     return { id, type: 'struct', position: { x, y }, data }
 }
 
-/** 创建连线：从源节点指定字段行右侧连到目标节点标题栏左侧 */
+/**
+ * 创建连线：默认从源节点指定字段行「右侧」出线，连到目标节点标题栏「左侧」入线（与参考 SVG 一致）。
+ * 两侧吸附点均可在编辑模式下被拖拽换边，故 handle id 统一带 -left/-right 后缀。
+ */
 function createStructEdge(id: string, source: string, sourceField: number, target: string): Edge {
     return {
         id,
         source,
         target,
-        sourceHandle: `field-${sourceField}`,
-        targetHandle: 'header',
+        sourceHandle: `field-${sourceField}-right`,
+        targetHandle: 'header-left',
         style: EDGE_STYLE
     }
 }
@@ -84,9 +111,14 @@ interface CanvasViewApi {
     nodes: Ref<Node[]>
     edges: Ref<Edge[]>
     nodeTypes: NodeTypesObject
+    edgeTypes: EdgeTypesObject
     backgroundGap: Ref<number>
     dotSize: Ref<number>
     handleViewportChange: (viewport: ViewportTransform) => void
+    /** 编辑模式下拖拽连线端点到另一侧吸附点：用回传的新 connection 覆盖该连线的 handle */
+    handleEdgeUpdate: (payload: EdgeUpdateEvent) => void
+    /** 编辑模式下从吸附点拖拽新建连线：据 connection 生成新 Edge 并入画布 */
+    handleConnect: (connection: Connection) => void
     /** 依据主进程查询到的结构体记录，在画布上新增一个结构体卡片节点 */
     addStructNode: (record: StructNodeRecord) => void
     /** 按 hash 从画布移除节点渲染（保留红黑树缓存），供侧边栏「隐藏」父/子节点 */
@@ -95,13 +127,29 @@ interface CanvasViewApi {
     selectedNodeData: Ref<StructNodeData | null>
     /** 画布上所有节点的 id（hash）列表，供侧边栏同步眼睛显隐初值 */
     canvasNodeIds: ComputedRef<string[]>
+    /** 当前画布交互模式：'select' 选择模式｜'edit' 编辑模式 */
+    canvasMode: Ref<CanvasMode>
+    /** 切换画布交互模式（选择 ⇄ 编辑），由底边栏两态按键触发 */
+    toggleCanvasMode: () => void
+    /** 是否处于编辑模式：门控「连线吸附点左右调整」等编辑能力 */
+    isEditMode: ComputedRef<boolean>
 }
 
 /** Canvas 页面的组合式函数：基于 Vue Flow 的节点编辑器 */
 export function useCanvasView(): CanvasViewApi {
     const nodes = ref([]) as Ref<Node[]>
     const edges = ref([]) as Ref<Edge[]>
-    const { fitView } = useVueFlow()
+
+    /** 当前画布交互模式：默认选择模式（仅选中/查看），编辑模式下开放吸附点调整等能力 */
+    const canvasMode = ref<CanvasMode>('select')
+
+    /** 切换画布交互模式（选择 ⇄ 编辑）：由底边栏两态按键触发 */
+    function toggleCanvasMode(): void {
+        canvasMode.value = canvasMode.value === 'select' ? 'edit' : 'select'
+    }
+
+    /** 是否处于编辑模式：后续用于门控「连线吸附点左右调整」等编辑能力 */
+    const isEditMode = computed(() => canvasMode.value === 'edit')
 
     /** 已动态新增的节点数：用于错开新节点位置，避免相互重叠 */
     let addedNodeCount = 0
@@ -127,26 +175,37 @@ export function useCanvasView(): CanvasViewApi {
     /** 画布上所有节点的 id（即结构体 hash）列表：供侧边栏判断父/子节点是否已渲染，同步眼睛显隐初值 */
     const canvasNodeIds = computed(() => nodes.value.map((node) => node.id))
 
-    /** 节点选中状态变化时的触发逻辑：高亮关联连线并同步选中节点数据给侧边栏 */
+    /** 节点选中状态变化时的触发逻辑：高亮关联连线（流动箭头）并同步选中节点数据给侧边栏 */
     function handleSelectionChange(selectedNodes: Node[]): void {
-        // 高亮与选中节点相连的连线：
-        // - 选中节点作为 target（连线来自父节点）→ 紫色
-        // - 选中节点作为 source（连线指向子节点）→ 蓝色
-        // - 高亮连线统一加粗到 SELECTED_EDGE_WIDTH，其余恢复默认灰色与默认线宽
+        // 高亮与选中节点相连的连线，改用 flowArrow 自定义连线：箭头沿路径从起点流动到终点，以区分父/子方向：
+        // - 选中节点作为 target（连线来自父节点）→ 紫色，箭头由父节点流向选中节点
+        // - 选中节点作为 source（连线指向子节点）→ 蓝色，箭头由选中节点流向子节点
+        // - 高亮连线加粗到 SELECTED_EDGE_WIDTH；其余恢复默认灰色贝塞尔连线、无箭头
         const selectedIds = new Set(selectedNodes.map((node) => node.id))
         edges.value = edges.value.map((edge) => {
             let stroke = EDGE_STYLE.stroke
             let strokeWidth = EDGE_STYLE.strokeWidth
+            let highlighted = false
             if (selectedIds.has(edge.target)) {
-                // 选中节点是 target → source 是其父节点 → 紫色加粗
+                // 选中节点是 target → source 是其父节点 → 紫色（流入选中节点）
                 stroke = SELECTED_EDGE_COLOR_PARENT
                 strokeWidth = SELECTED_EDGE_WIDTH
+                highlighted = true
             } else if (selectedIds.has(edge.source)) {
-                // 选中节点是 source → target 是其子节点 → 蓝色加粗
+                // 选中节点是 source → target 是其子节点 → 蓝色（流出到子节点）
                 stroke = SELECTED_EDGE_COLOR_CHILD
                 strokeWidth = SELECTED_EDGE_WIDTH
+                highlighted = true
             }
-            return { ...edge, style: { ...EDGE_STYLE, stroke, strokeWidth } }
+            return {
+                ...edge,
+                // 高亮连线改用自定义 flowArrow 类型：箭头沿路径从起点流动到终点；其余用默认贝塞尔连线
+                type: highlighted ? 'flowArrow' : undefined,
+                style: { ...EDGE_STYLE, stroke, strokeWidth },
+                // 不再使用吸附在节点上的静态箭头(markerEnd)与虚线动画(animated)，流动效果由 flowArrow 内部渲染
+                animated: false,
+                markerEnd: undefined
+            }
         })
 
         // 同步选中节点数据给侧边栏：取第一个选中节点的 data，无选中时置 null
@@ -167,6 +226,73 @@ export function useCanvasView(): CanvasViewApi {
                 .join(','),
         () => handleSelectionChange(nodes.value.filter((node) => (node as GraphNode).selected))
     )
+
+    /**
+     * 编辑模式下拖拽连线端点到另一侧吸附点后触发：Vue Flow 校验通过后回传新的 connection，
+     * 用它覆盖该连线的 source/target 与对应 handle，实现左右吸附点切换。
+     * 未拖到有效吸附点时 Vue Flow 不触发本回调，连线保持原样，不会被误删。
+     */
+    function handleEdgeUpdate({ edge, connection }: EdgeUpdateEvent): void {
+        edges.value = edges.value.map((e) =>
+            e.id === edge.id
+                ? {
+                      ...e,
+                      source: connection.source,
+                      target: connection.target,
+                      sourceHandle: connection.sourceHandle ?? null,
+                      targetHandle: connection.targetHandle ?? null
+                  }
+                : e
+        )
+        console.log(
+            '[canvas] 连线吸附点已调整:',
+            edge.id,
+            connection.sourceHandle,
+            '→',
+            connection.targetHandle
+        )
+    }
+
+    /**
+     * 编辑模式下从源吸附点拖到目标吸附点新建连线：Vue Flow 校验通过后回传 connection，
+     * 据此生成一条与自动连线同构的 Edge 并入 edges；跳过无效端点、自环与端点完全相同的重复连线。
+     */
+    function handleConnect(connection: Connection): void {
+        const { source, target } = connection
+        const sourceHandle = connection.sourceHandle ?? null
+        const targetHandle = connection.targetHandle ?? null
+        // 缺少任一端或自环（源=目标）直接忽略
+        if (!source || !target || source === target) {
+            console.warn('[canvas] 连线端点无效，已忽略新建:', connection)
+            return
+        }
+        // 去重：已存在「节点 + 吸附点」完全相同的连线则跳过，避免与自动连线或既有手动连线重叠
+        const duplicated = edges.value.some(
+            (e) =>
+                e.source === source &&
+                e.target === target &&
+                (e.sourceHandle ?? null) === sourceHandle &&
+                (e.targetHandle ?? null) === targetHandle
+        )
+        if (duplicated) {
+            console.log(
+                '[canvas] 连线已存在，跳过重复新建:',
+                source,
+                sourceHandle,
+                '→',
+                target,
+                targetHandle
+            )
+            return
+        }
+        // id 由两端「节点 + 吸附点」组成，既唯一又便于后续去重
+        const edgeId = `e-${source}-${sourceHandle}-${target}-${targetHandle}`
+        edges.value = [
+            ...edges.value,
+            { id: edgeId, source, target, sourceHandle, targetHandle, style: EDGE_STYLE }
+        ]
+        console.log('[canvas] 已新建连线:', edgeId)
+    }
 
     /**
      * 为新加入的结构体节点构建与画布上「已存在」节点的连线（不递归加载缺失的子节点）：
@@ -222,7 +348,7 @@ export function useCanvasView(): CanvasViewApi {
     /**
      * 依据主进程 query-node 返回的记录在画布新增结构体卡片节点：
      * 解析 ui_json（画布格式 StructNodeData）→ 以 hash 为节点 id 去重 → 追加到 nodes →
-     * 与画布上已存在的相关节点自动连线 → 重新 fitView 使新节点进入视野。
+     * 与画布上已存在的相关节点自动连线。不改变当前视口缩放/平移，避免打断用户操作。
      */
     function addStructNode(record: StructNodeRecord): void {
         if (!record?.hash) {
@@ -260,14 +386,6 @@ export function useCanvasView(): CanvasViewApi {
             '新增连线',
             addedEdges.length
         )
-        // 下一帧重新适配视图，确保新增节点可见
-        void nextTick(() => {
-            try {
-                fitView({ padding: 0.3, duration: 300 })
-            } catch (err) {
-                console.warn('[canvas] fitView 失败:', err)
-            }
-        })
     }
 
     /**
@@ -284,16 +402,67 @@ export function useCanvasView(): CanvasViewApi {
         console.log('[canvas] 已隐藏节点（保留红黑树缓存）:', hash)
     }
 
+    /**
+     * 编辑模式下按 Delete/Backspace 隐藏当前选中的节点或连线：
+     * - 节点：复用 removeStructNode（同时清理与其相连的所有连线），保留红黑树缓存，可通过侧边栏眼睛按键恢复；
+     * - 连线：仅从画布 edges 数组过滤掉该连线，两端节点保持不变；
+     * 焦点落在 INPUT / TEXTAREA / contenteditable 元素上时忽略，避免与文本编辑（删除字符）冲突。
+     * 选择模式（非编辑模式）下本函数直接返回，Delete 不做任何处理。
+     */
+    function handleDeleteKeyDown(event: KeyboardEvent): void {
+        if (!isEditMode.value) return
+        if (event.key !== 'Delete' && event.key !== 'Backspace') return
+        const target = event.target as HTMLElement | null
+        if (target) {
+            const tag = target.tagName
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || target.isContentEditable) return
+        }
+        // 收集当前选中的连线 id 与节点 id（快照，避免后续过滤时集合被修改）
+        const selectedEdgeIds = new Set(
+            edges.value.filter((edge) => (edge as GraphEdge).selected).map((edge) => edge.id)
+        )
+        const selectedNodeIds = nodes.value
+            .filter((node) => (node as GraphNode).selected)
+            .map((node) => node.id)
+        if (selectedEdgeIds.size === 0 && selectedNodeIds.length === 0) return
+        // 阻止浏览器默认行为（如 Backspace 触发历史后退）
+        event.preventDefault()
+        // 先移除选中的连线：避免随后按节点移除时重复过滤
+        if (selectedEdgeIds.size > 0) {
+            edges.value = edges.value.filter((edge) => !selectedEdgeIds.has(edge.id))
+        }
+        // 再按节点移除：removeStructNode 内部会一并清理与其相连的其余连线
+        selectedNodeIds.forEach((hash) => removeStructNode(hash))
+        console.log(
+            '[canvas] 编辑模式 Delete：已隐藏选中连线',
+            selectedEdgeIds.size,
+            '条、节点',
+            selectedNodeIds.length,
+            '个'
+        )
+    }
+
+    // 全局监听 keydown：编辑器画布本身不一定持有焦点（点击空白/侧边栏后仍希望 Delete 生效），
+    // 故挂在 window 上，仅在编辑模式下响应；组件卸载时移除监听，避免内存泄漏与跨页残留。
+    onMounted(() => window.addEventListener('keydown', handleDeleteKeyDown))
+    onBeforeUnmount(() => window.removeEventListener('keydown', handleDeleteKeyDown))
+
     return {
         nodes,
         edges,
         nodeTypes,
+        edgeTypes,
         backgroundGap,
         dotSize,
         handleViewportChange,
+        handleEdgeUpdate,
+        handleConnect,
         addStructNode,
         removeStructNode,
         selectedNodeData,
-        canvasNodeIds
+        canvasNodeIds,
+        canvasMode,
+        toggleCanvasMode,
+        isEditMode
     }
 }

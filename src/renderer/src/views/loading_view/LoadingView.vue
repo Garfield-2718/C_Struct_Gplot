@@ -8,9 +8,6 @@
                     <p class="ldv-description">正在处理项目，请稍候。</p>
                     <div class="ldv-progress" aria-hidden="true"></div>
                 </div>
-                <div class="ldv-debug-slot">
-                    <DebugButton @click="handleNavigateToCanvas" />
-                </div>
             </section>
         </main>
     </div>
@@ -18,9 +15,8 @@
 
 <script lang="ts" setup>
 import { useLoadingView } from './useLoadingView'
-import DebugButton from '@/views/debug_button/DebugButton.vue'
 
-const { handleNavigateToCanvas } = useLoadingView()
+useLoadingView()
 </script>
 
 <style scoped src="./LoadingView.css"></style>

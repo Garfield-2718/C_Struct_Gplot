@@ -10,8 +10,8 @@ const DEFAULT_SIDEBAR_WIDTH = 280
 /** 拖拽热区宽度（px）：手柄覆盖侧边栏右缘一小段区域 */
 const HANDLE_SIZE = 8
 
-/** 分段内容区 max-height 上限允许的范围（px） */
-const MIN_SECTION_HEIGHT = 48
+/** 分段内容区 max-height 上限允许的范围（px）：下限为 0，可拖动收拢至完全不展示 */
+const MIN_SECTION_HEIGHT = 0
 const MAX_SECTION_HEIGHT = 400
 
 /** 分段状态：支持点击标题栏折叠/展开，拖动底边框调节内容区 max-height 上限 */
@@ -215,8 +215,10 @@ export function useSidebarView(
             // 内容为空则该段默认折叠，非空则展开
             sectionStates.elementInfo.collapsed = elementInfoRows.value.length === 0
 
-            // 父节点列表：将 parentHashes 解析为可读标题
-            const parentHashes = node.parentHashes ?? []
+            // 父节点列表：去重后将 parentHashes 解析为可读标题
+            // 与子节点侧一致做 Set 去重：主进程 findParentHashes 已用 SELECT DISTINCT 在 DB 层去重，
+            // 此处再防御一层，避免历史数据、缓存或后续改动重新引入重复项
+            const parentHashes = [...new Set(node.parentHashes ?? [])]
             const parentLabels = await queryNodeLabels(parentHashes)
             if (seq !== querySeq) return
             parentNodes.value = parentLabels.map(({ hash, title }) => ({

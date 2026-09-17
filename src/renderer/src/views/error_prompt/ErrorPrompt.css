@@ -1,0 +1,104 @@
+/* ========== 错误提示弹窗：Teleport 至 body，全屏半透明遮罩 + 居中面板，风格与底边栏对话框一致 ========== */
+.errp-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--vs-overlay-bg);
+}
+
+/* 对话框面板：纵向排列 标题行 / 错误详情 / 操作区，配色沿用编辑器面板 */
+.errp-dialog {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-sizing: border-box;
+    width: 420px;
+    max-width: calc(100vw - 48px);
+    padding: 20px;
+    background-color: var(--vs-editor-bg);
+    border: 1px solid var(--vs-widget-border);
+    border-radius: 2px;
+    box-shadow: var(--vs-shadow-heavy);
+    user-select: none;
+}
+
+/* 标题行：错误图标 + 标题文本，图标使用错误色强调 */
+.errp-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.errp-icon {
+    flex-shrink: 0;
+    color: var(--vs-error-foreground);
+}
+
+.errp-title {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 22px;
+    color: var(--vs-title-foreground);
+}
+
+/* 错误详情：保留换行并允许长文本折行，避免超出面板 */
+.errp-message {
+    margin: 0;
+    font-size: 13px;
+    line-height: 20px;
+    color: var(--vs-foreground);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* 操作区：确认按键右对齐 */
+.errp-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.errp-button {
+    padding: 6px 16px;
+    background-color: var(--vs-widget-bg);
+    border: 1px solid var(--vs-widget-border);
+    border-radius: 2px;
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 20px;
+    color: var(--vs-foreground);
+    cursor: pointer;
+}
+
+.errp-button:hover {
+    background-color: var(--vs-list-hover-bg);
+}
+
+.errp-button:active {
+    background-color: var(--vs-list-inactive-selection-bg);
+}
+
+.errp-button:focus-visible {
+    outline: 1px solid var(--vs-focus-border);
+    outline-offset: -2px;
+}
+
+/* 主操作按键（确定）：柔和蓝强调，与其它对话框主按键一致 */
+.errp-button-primary {
+    background-color: var(--vs-button-bg);
+    border-color: var(--vs-button-bg);
+    color: var(--vs-button-fg);
+}
+
+.errp-button-primary:hover {
+    background-color: var(--vs-button-hover-bg);
+    border-color: var(--vs-button-hover-bg);
+}
+
+.errp-button-primary:active {
+    background-color: var(--vs-button-hover-bg);
+    border-color: var(--vs-button-hover-bg);
+}

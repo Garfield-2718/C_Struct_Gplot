@@ -88,8 +88,8 @@
     border-width: 3px;
 }
 
-/* ========== 连接点 ========== */
-/* 目标连接点：标题栏左侧中心，对应 SVG 中指向标题栏的灰色圆点 */
+/* ========== 连接点（吸附点）：标题栏与字段行左右各一个，支持编辑模式下拖拽连线端点换边 ========== */
+/* 目标连接点：标题栏左右各一个灰色圆点，对应 SVG 中指向标题栏的圆点 */
 .struct-node-target-handle {
     width: 6px;
     height: 6px;
@@ -100,13 +100,33 @@
     background: #999999;
 }
 
-/* 源连接点：每个字段行右侧中心，SVG 中不可见 */
+/* 源连接点：字段行左右各一个；默认隐藏且不拦截节点点击，仅编辑模式显示并可拖拽起线/落点 */
 .struct-node-source-handle {
-    width: 2px;
-    height: 2px;
-    min-width: 2px;
-    min-height: 2px;
+    width: 6px;
+    height: 6px;
+    min-width: 6px;
+    min-height: 6px;
     border: none;
-    background: transparent;
+    border-radius: 50%;
+    background: #999999;
     opacity: 0;
+    pointer-events: none;
+}
+
+/* 选择模式：隐藏标题栏右侧入线点（且不拦截点击），保持「仅左侧一个圆点」的既有外观 */
+.struct-node-target-handle-right {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* 编辑模式（CanvasView 在 wrapper 上加 .canvas-edit-mode）：显示全部吸附点并开放交互，可从源点拖拽新建连线、或拖拽端点换边 */
+.canvas-edit-mode .struct-node-target-handle-right {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.canvas-edit-mode .struct-node-source-handle {
+    opacity: 1;
+    pointer-events: auto;
+    cursor: crosshair;
 }

@@ -39,3 +39,20 @@
     pointer-events: none;
     user-select: none;
 }
+
+/* ========== 编辑模式钩子：底边栏两态按键切到「编辑模式」时，CanvasView 给 .canvas-wrapper 加 .canvas-edit-mode ========== */
+/* 该模式下开放「拖拽连线端点到另一侧吸附点」（见 useCanvasView 的 isEditMode 与 handleEdgeUpdate）；
+   吸附点随模式显隐的样式集中在 struct_node/StructNode.css。 */
+
+/* 编辑模式下单独选中的连线：红色加粗，直观提示 Delete 将隐藏哪条线。
+   Vue Flow 会把 selected 类挂到 .vue-flow__edge 上；由于 handleSelectionChange 会把 stroke/strokeWidth
+   写入行内 style，普通 CSS 选择器权重不足，需要 !important 才能覆盖。 */
+.canvas-edit-mode .vue-flow__edge.selected .vue-flow__edge-path {
+    stroke: #ef4444 !important;
+    stroke-width: 3 !important;
+}
+
+/* 选中连线的鼠标指针样式：提示可交互（Delete 隐藏） */
+.canvas-edit-mode .vue-flow__edge.selected {
+    cursor: pointer;
+}

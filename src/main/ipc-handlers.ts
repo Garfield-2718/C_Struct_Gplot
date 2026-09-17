@@ -1,13 +1,16 @@
 import { app, ipcMain, dialog } from 'electron'
 import { join, basename, extname, dirname } from 'path'
-import { mkdirSync } from 'fs'
+import { mkdirSync, copyFileSync, existsSync } from 'fs'
 import { spawnCli } from './cli-service'
 import {
     findStructRecords,
     findStructRecordsByHash,
     findStructNamesByHashes,
     resolveDbPath,
-    findParentHashes
+    resolveDefaultDbDir,
+    findParentHashes,
+    setActiveDbPath,
+    validateStructDb
 } from './db-service'
 import type { StructRecord } from './db-service'
 import {
@@ -266,6 +269,23 @@ export function registerIpcHandlers(): void {
         return result.filePaths[0]
     })
 
+    // IPC: 打开「选择已有数据库」对话框，仅用于导入已存在的 .db 文件。
+    // 与 select-project-file 区分：固定为文件选择器并以 .db 为首选过滤器，
+    // 取消或选空时返回 null。
+    ipcMain.handle('select-db-file', async () => {
+        const result = await dialog.showOpenDialog({
+            properties: ['openFile'],
+            filters: [
+                { name: 'SQLite 数据库', extensions: ['db'] },
+                { name: '所有文件', extensions: ['*'] }
+            ]
+        })
+        if (result.canceled || result.filePaths.length === 0) {
+            return null
+        }
+        return result.filePaths[0]
+    })
+
     // IPC: 接收渲染进程传来的文件路径，调用 CLI 二进制以 init 模式解析
     ipcMain.handle('process-project-file', async (_event, filePath: string) => {
         console.log('[Main] 接收到待处理的文件路径:', filePath)
@@ -289,6 +309,8 @@ export function registerIpcHandlers(): void {
         const dbFilePath = join(dbDir, dbName)
         console.log('[Main] db 文件路径:', dbFilePath)
         if (result.code === 0) {
+            // 将本次生成的数据库设为会话活动库，使画布 add-node 等通道直接查询此库
+            setActiveDbPath(dbFilePath)
             return { status: 'success', filePath, message: result.stdout || '处理完成' }
         }
         return {
@@ -298,7 +320,52 @@ export function registerIpcHandlers(): void {
         }
     })
 
-    // IPC: 接收渲染进程「添加节点」对话框传来的字符串；解析结构体标识后在 db/hostapd.db
+    // IPC: 接收渲染进程「导入已有数据库」传来的 .db 路径：校验其含 structures / relations
+    // 两表且字段与 CLI schema 一致后，复制到应用数据库目录 struct_list_db/（与 CLI 生成库同一位置，
+    // 便于统一管理且重启后仍可被 resolveDbPath 发现），并设为会话活动库供画布查询。
+    // 返回 { status, message, dbPath }：status 为 success/failure，dbPath 为最终生效的库路径。
+    ipcMain.handle('import-db-file', async (_event, dbPath: string) => {
+        const trimmed = typeof dbPath === 'string' ? dbPath.trim() : ''
+        console.log('[Main] 接收到待导入的数据库路径:', trimmed)
+        if (!trimmed) {
+            return { status: 'failure', dbPath, message: '数据库路径无效' }
+        }
+        if (!existsSync(trimmed)) {
+            return { status: 'failure', dbPath: trimmed, message: '数据库文件不存在' }
+        }
+        // 校验数据库结构：需含 structures / relations 两表且字段与 CLI schema 一致
+        const validation = validateStructDb(trimmed)
+        if (!validation.ok) {
+            console.warn('[Main] import-db-file: 数据库校验未通过:', validation.message)
+            return {
+                status: 'failure',
+                dbPath: trimmed,
+                message: `所选文件不是有效的结构体数据库（${validation.message}）`
+            }
+        }
+        // 复制到应用数据库目录，使其与 CLI 生成库处于同一受管位置
+        const dbDir = resolveDefaultDbDir()
+        mkdirSync(dbDir, { recursive: true })
+        const targetPath = join(dbDir, basename(trimmed))
+        try {
+            // 源文件已在目标位置时无需重复复制，直接沿用
+            if (targetPath !== trimmed) {
+                copyFileSync(trimmed, targetPath)
+            }
+        } catch (err) {
+            console.error('[Main] import-db-file: 复制数据库失败', err)
+            return {
+                status: 'failure',
+                dbPath: trimmed,
+                message: `复制数据库失败: ${(err as Error).message}`
+            }
+        }
+        setActiveDbPath(targetPath)
+        console.log('[Main] 已导入并设为活动数据库:', targetPath)
+        return { status: 'success', dbPath: targetPath, message: '数据库导入成功' }
+    })
+
+    // IPC: 接收渲染进程「添加节点」对话框传来的字符串；解析结构体标识后在当前活动数据库
     // 中查找，按画布渲染格式转化其 ui_json 并存入红黑树（以 hash 为键）。
     // 返回 { success, hashes }：success 为是否成功写入，hashes 为写入节点的 hash 列表。
     ipcMain.handle('add-node', async (_event, nodeName: string): Promise<AddNodeResult> => {
@@ -310,9 +377,9 @@ export function registerIpcHandlers(): void {
         }
         // 解析 "struct hapd_interfaces" → 类型 struct + 名称 hapd_interfaces
         const { dataTypeFirst, structName } = parseStructIdentity(trimmed)
-        // 数据库：项目 db/hostapd.db（开发态 app.getAppPath() 即项目根）
-        const dbPath = join(app.getAppPath(), 'db', 'hostapd.db')
         try {
+            // 数据库：会话活动库 / 默认目录中的唯一 .db；无可用库时 resolveDbPath 报错，由 catch 兑底
+            const dbPath = resolveDbPath()
             const hashes = loadStructIntoTree(structName, dataTypeFirst, dbPath, 'add-node')
             return { success: hashes.length > 0, hashes }
         } catch (err) {
@@ -331,8 +398,9 @@ export function registerIpcHandlers(): void {
             console.warn('[Main] add-node-by-hash: hash 为空，已忽略')
             return { success: false, hashes: [] }
         }
-        const dbPath = join(app.getAppPath(), 'db', 'hostapd.db')
         try {
+            // 数据库：会话活动库 / 默认目录中的唯一 .db；无可用库时 resolveDbPath 报错，由 catch 兑底
+            const dbPath = resolveDbPath()
             const hashes = loadStructIntoTreeByHash(key, dbPath, 'add-node-by-hash')
             return { success: hashes.length > 0, hashes }
         } catch (err) {
