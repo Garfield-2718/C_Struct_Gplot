@@ -23,7 +23,7 @@ import { existsSync, mkdirSync, copyFileSync, chmodSync } from 'node:fs'
 // ---------------------------------------------------------------------------
 
 /** 为 true 时直接使用本地 CLI 源码目录（仅开发调试用），跳过 git clone。 */
-const USE_LOCAL_CLI = true
+const USE_LOCAL_CLI = false
 /** 本地 CLI 源码目录（USE_LOCAL_CLI 为 true 时生效）。 */
 const LOCAL_CLI_DIR = '/home/wsl/code/C_Struct_Gplot_CLI'
 /** 默认从该 GitHub 仓库 clone CLI 源码。 */
