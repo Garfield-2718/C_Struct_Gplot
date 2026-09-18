@@ -1,11 +1,11 @@
 <template>
     <div class="ldv-page">
-        <header class="ldv-titlebar">项目加载</header>
+        <header class="ldv-titlebar">{{ t('loading.pageTitle') }}</header>
         <main class="ldv-workspace">
             <section class="ldv-content" aria-labelledby="ldv-title">
                 <div class="ldv-status" role="status" aria-live="polite" aria-atomic="true">
-                    <h1 id="ldv-title" class="ldv-title">加载中</h1>
-                    <p class="ldv-description">正在处理项目，请稍候。</p>
+                    <h1 id="ldv-title" class="ldv-title">{{ t('loading.title') }}</h1>
+                    <p class="ldv-description">{{ t('loading.description') }}</p>
                     <div class="ldv-progress" aria-hidden="true"></div>
                 </div>
             </section>
@@ -14,8 +14,10 @@
 </template>
 
 <script lang="ts" setup>
+import { useI18n } from 'vue-i18n'
 import { useLoadingView } from './useLoadingView'
 
+const { t } = useI18n({ useScope: 'global' })
 useLoadingView()
 </script>
 

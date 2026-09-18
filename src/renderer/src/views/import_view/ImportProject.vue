@@ -1,10 +1,10 @@
 <template>
     <div class="imv-page">
-        <header class="imv-titlebar">项目导入</header>
+        <header class="imv-titlebar">{{ t('import.pageTitle') }}</header>
         <main class="imv-workspace">
             <section class="imv-content" aria-labelledby="imv-title">
-                <h1 id="imv-title" class="imv-title">导入项目</h1>
-                <p class="imv-description">从本地选择项目文件以开始处理。</p>
+                <h1 id="imv-title" class="imv-title">{{ t('import.title') }}</h1>
+                <p class="imv-description">{{ t('import.description') }}</p>
                 <button
                     type="button"
                     class="imv-file-picker"
@@ -32,15 +32,19 @@
                         <path d="M9 3h15l9 9v33H7V3h2Z" />
                         <path d="M24 3v10h9M13 23h14M13 30h14M13 37h8" />
                     </svg>
-                    <span id="imv-file-label" class="imv-file-label">选择项目文件</span>
-                    <span id="imv-file-hint" class="imv-file-hint">打开文件选择窗口</span>
+                    <span id="imv-file-label" class="imv-file-label">{{
+                        t('import.selectFile')
+                    }}</span>
+                    <span id="imv-file-hint" class="imv-file-hint">{{
+                        t('import.selectFileHint')
+                    }}</span>
                 </button>
                 <div class="imv-secondary-action">
-                    <div class="imv-secondary-divider" aria-hidden="true">或</div>
+                    <div class="imv-secondary-divider" aria-hidden="true">{{ t('common.or') }}</div>
                     <button
                         type="button"
                         class="imv-db-picker"
-                        title="选择本地已有的 .db 数据库文件直接载入"
+                        :title="t('import.selectDatabaseHint')"
                         @click="handleSelectDb"
                     >
                         <svg
@@ -60,7 +64,7 @@
                             <path d="M4 5v14c0 1.66 3.58 3 8 3s8-1.34 8-3V5" />
                             <path d="M4 12c0 1.66 3.58 3 8 3s8-1.34 8-3" />
                         </svg>
-                        <span class="imv-db-label">导入已有数据库 (.db)</span>
+                        <span class="imv-db-label">{{ t('import.selectDatabase') }}</span>
                     </button>
                 </div>
             </section>
@@ -69,15 +73,18 @@
             :visible="errorVisible"
             :title="errorTitle"
             :message="errorMessage"
+            :detail="errorDetail"
             @close="handleDismissError"
         />
     </div>
 </template>
 
 <script lang="ts" setup>
+import { useI18n } from 'vue-i18n'
 import { useImportProject } from './useImportProject'
 import ErrorPrompt from '@/views/error_prompt/ErrorPrompt.vue'
 
+const { t } = useI18n({ useScope: 'global' })
 const {
     isDragOver,
     handleSelectFile,
@@ -86,6 +93,7 @@ const {
     errorVisible,
     errorTitle,
     errorMessage,
+    errorDetail,
     handleDismissError
 } = useImportProject()
 </script>

@@ -21,6 +21,19 @@ import {
     treeFindLabel,
     buildLabel
 } from './rbtree-service'
+import { getSettingsLocale, loadSettings, saveSettings } from './settings-service'
+import type { SettingsData } from './settings-service'
+import { createIpcFailure, errorMessageKey } from '../shared/errors'
+import type { AppError, IpcFailure, IpcResultContext } from '../shared/errors'
+import { translate } from '../shared/locales/translate'
+
+/** message 保留兼容；渲染端只用 error.code/params 翻译，原始诊断保留在 detail。 */
+function localizedFailure(error: AppError, context: IpcResultContext): IpcFailure {
+    return createIpcFailure(error, {
+        ...context,
+        message: translate(getSettingsLocale(), errorMessageKey(error.code), error.params)
+    })
+}
 
 /** load-struct 通道入参：要加载的结构体标识与可选的数据库路径、类型限定 */
 interface LoadStructPayload {
@@ -247,6 +260,17 @@ function loadStructIntoTreeByHash(hash: string, dbPath: string, tag: string): st
  * 数据库读取能力由 db-service.ts 提供。
  */
 export function registerIpcHandlers(): void {
+    // IPC: 加载持久化设置（userData/settings.json）
+    ipcMain.handle('load-settings', async () => {
+        return loadSettings()
+    })
+
+    // IPC: 保存设置到配置文件
+    ipcMain.handle('save-settings', async (_event, data: SettingsData) => {
+        saveSettings(data)
+        return true
+    })
+
     // IPC: 打开文件选择对话框
     // mode 为 'file'（默认，选择文件）或 'directory'（选择目录）。
     // Windows/Linux 的原生对话框无法同时充当文件选择器与目录选择器：传入
@@ -259,9 +283,15 @@ export function registerIpcHandlers(): void {
         } else if (process.platform === 'darwin') {
             properties = ['openFile', 'openDirectory']
         }
+        const locale = getSettingsLocale()
         const result = await dialog.showOpenDialog({
             properties,
-            filters: [{ name: '所有文件', extensions: ['*'] }]
+            title: translate(
+                locale,
+                mode === 'directory' ? 'native.selectProjectDirectory' : 'native.selectProjectFile'
+            ),
+            buttonLabel: translate(locale, 'native.open'),
+            filters: [{ name: translate(locale, 'native.allFiles'), extensions: ['*'] }]
         })
         if (result.canceled || result.filePaths.length === 0) {
             return null
@@ -273,11 +303,14 @@ export function registerIpcHandlers(): void {
     // 与 select-project-file 区分：固定为文件选择器并以 .db 为首选过滤器，
     // 取消或选空时返回 null。
     ipcMain.handle('select-db-file', async () => {
+        const locale = getSettingsLocale()
         const result = await dialog.showOpenDialog({
             properties: ['openFile'],
+            title: translate(locale, 'native.selectDatabase'),
+            buttonLabel: translate(locale, 'native.open'),
             filters: [
-                { name: 'SQLite 数据库', extensions: ['db'] },
-                { name: '所有文件', extensions: ['*'] }
+                { name: translate(locale, 'native.sqliteDatabase'), extensions: ['db'] },
+                { name: translate(locale, 'native.allFiles'), extensions: ['*'] }
             ]
         })
         if (result.canceled || result.filePaths.length === 0) {
@@ -291,32 +324,50 @@ export function registerIpcHandlers(): void {
         console.log('[Main] 接收到待处理的文件路径:', filePath)
         const trimmed = typeof filePath === 'string' ? filePath.trim() : ''
         if (!trimmed) {
-            return { status: 'failure', filePath, message: '文件路径无效' }
+            return localizedFailure({ code: 'FILE_PATH_INVALID' }, { filePath })
         }
         // db 输出目录：可执行文件所在目录下 struct_list_db/
-        const appDir = app.isPackaged ? dirname(app.getPath('exe')) : app.getAppPath()
-        const dbDir = join(appDir, 'struct_list_db')
-        mkdirSync(dbDir, { recursive: true })
-        // db 文件名：取传入 filePath 的最后一段文件名（去后缀）+ .db
-        const dbName = basename(trimmed, extname(trimmed)) + '.db'
-        // 调用 CLI 二进制: --mode=init --input-file --db-path --db-name
-        const result = await spawnCli([
-            '--mode=init',
-            `--input-file=${trimmed}`,
-            `--db-path=${dbDir}`,
-            `--db-name=${dbName}`
-        ])
-        const dbFilePath = join(dbDir, dbName)
-        console.log('[Main] db 文件路径:', dbFilePath)
-        if (result.code === 0) {
-            // 将本次生成的数据库设为会话活动库，使画布 add-node 等通道直接查询此库
-            setActiveDbPath(dbFilePath)
-            return { status: 'success', filePath, message: result.stdout || '处理完成' }
-        }
-        return {
-            status: 'failure',
-            filePath,
-            message: result.stderr || `CLI 退出码: ${result.code}`
+        try {
+            const appDir = app.isPackaged ? dirname(app.getPath('exe')) : app.getAppPath()
+            const dbDir = join(appDir, 'struct_list_db')
+            mkdirSync(dbDir, { recursive: true })
+            // db 文件名：取传入 filePath 的最后一段文件名（去后缀）+ .db
+            const dbName = basename(trimmed, extname(trimmed)) + '.db'
+            // 调用 CLI 二进制: --mode=init --input-file --db-path --db-name
+            const result = await spawnCli([
+                '--mode=init',
+                `--input-file=${trimmed}`,
+                `--db-path=${dbDir}`,
+                `--db-name=${dbName}`
+            ])
+            const dbFilePath = join(dbDir, dbName)
+            console.log('[Main] db 文件路径:', dbFilePath)
+            if (result.code === 0) {
+                // 将本次生成的数据库设为会话活动库，使画布 add-node 等通道直接查询此库
+                setActiveDbPath(dbFilePath)
+                return {
+                    status: 'success',
+                    filePath,
+                    message:
+                        result.stdout || translate(getSettingsLocale(), 'native.projectProcessed')
+                }
+            }
+            return localizedFailure(
+                result.error ?? {
+                    code: 'CLI_FAILED',
+                    params: { exitCode: result.code },
+                    detail: result.stderr
+                },
+                { filePath }
+            )
+        } catch (cause) {
+            return localizedFailure(
+                {
+                    code: 'PROJECT_PROCESS_FAILED',
+                    detail: cause instanceof Error ? cause.message : String(cause)
+                },
+                { filePath }
+            )
         }
     })
 
@@ -328,41 +379,43 @@ export function registerIpcHandlers(): void {
         const trimmed = typeof dbPath === 'string' ? dbPath.trim() : ''
         console.log('[Main] 接收到待导入的数据库路径:', trimmed)
         if (!trimmed) {
-            return { status: 'failure', dbPath, message: '数据库路径无效' }
+            return localizedFailure({ code: 'DB_PATH_INVALID' }, { dbPath })
         }
         if (!existsSync(trimmed)) {
-            return { status: 'failure', dbPath: trimmed, message: '数据库文件不存在' }
+            return localizedFailure({ code: 'DB_FILE_MISSING' }, { dbPath: trimmed })
         }
         // 校验数据库结构：需含 structures / relations 两表且字段与 CLI schema 一致
         const validation = validateStructDb(trimmed)
         if (!validation.ok) {
             console.warn('[Main] import-db-file: 数据库校验未通过:', validation.message)
-            return {
-                status: 'failure',
-                dbPath: trimmed,
-                message: `所选文件不是有效的结构体数据库（${validation.message}）`
-            }
+            return localizedFailure(validation.error, { dbPath: trimmed })
         }
         // 复制到应用数据库目录，使其与 CLI 生成库处于同一受管位置
         const dbDir = resolveDefaultDbDir()
-        mkdirSync(dbDir, { recursive: true })
         const targetPath = join(dbDir, basename(trimmed))
         try {
+            mkdirSync(dbDir, { recursive: true })
             // 源文件已在目标位置时无需重复复制，直接沿用
             if (targetPath !== trimmed) {
                 copyFileSync(trimmed, targetPath)
             }
         } catch (err) {
             console.error('[Main] import-db-file: 复制数据库失败', err)
-            return {
-                status: 'failure',
-                dbPath: trimmed,
-                message: `复制数据库失败: ${(err as Error).message}`
-            }
+            return localizedFailure(
+                {
+                    code: 'DB_COPY_FAILED',
+                    detail: err instanceof Error ? err.message : String(err)
+                },
+                { dbPath: trimmed }
+            )
         }
         setActiveDbPath(targetPath)
         console.log('[Main] 已导入并设为活动数据库:', targetPath)
-        return { status: 'success', dbPath: targetPath, message: '数据库导入成功' }
+        return {
+            status: 'success',
+            dbPath: targetPath,
+            message: translate(getSettingsLocale(), 'native.databaseImported')
+        }
     })
 
     // IPC: 接收渲染进程「添加节点」对话框传来的字符串；解析结构体标识后在当前活动数据库

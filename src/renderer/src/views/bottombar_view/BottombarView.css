@@ -7,6 +7,7 @@
     flex-direction: column;
     align-items: stretch;
     padding: 4px;
+    max-width: calc(100% - 32px);
     background-color: var(--vs-widget-bg);
     border: 1px solid var(--vs-widget-border);
     border-radius: 2px;
@@ -96,6 +97,8 @@
 
 /* ========== 工具按键：无边框文本按键，配色与侧边栏保持一致 ========== */
 .bottombar-panel .bottombar-tool-button {
+    min-width: 0;
+    overflow-wrap: anywhere;
     padding: 4px 12px;
     border: none;
     border-radius: 2px;
@@ -147,6 +150,7 @@
     gap: 12px;
     box-sizing: border-box;
     width: 320px;
+    max-width: calc(100vw - 32px);
     padding: 20px;
     background-color: var(--vs-editor-bg);
     border: 1px solid var(--vs-widget-border);

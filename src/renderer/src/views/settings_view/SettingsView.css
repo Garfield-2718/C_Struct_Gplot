@@ -1,0 +1,389 @@
+/* ========== 设置页整体布局：顶部标题栏 + 内容工作区，与导入页保持一致的两行网格 ========== */
+.stv-page {
+    display: grid;
+    grid-template-rows: 44px minmax(0, 1fr);
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    background-color: var(--vs-editor-bg);
+    color: var(--vs-foreground);
+    font-size: 14px;
+    line-height: 22px;
+}
+
+/* ========== 标题栏：左侧返回按键 + 居中页面名，与顶边栏视觉一致 ========== */
+.stv-titlebar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    padding: 0 12px 0 8px;
+    background-color: var(--vs-titlebar-bg);
+    border-bottom: 1px solid var(--vs-widget-border);
+    color: var(--vs-title-foreground);
+    user-select: none;
+}
+
+.stv-titlebar-text {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* 返回按键：无边框文本按键，配色与顶边栏工具按键一致 */
+.stv-back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border: none;
+    border-radius: 2px;
+    background: transparent;
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 20px;
+    color: var(--vs-foreground);
+    cursor: pointer;
+}
+
+.stv-back-button:hover {
+    background-color: var(--vs-list-hover-bg);
+}
+
+.stv-back-button:active {
+    background-color: var(--vs-list-inactive-selection-bg);
+}
+
+.stv-back-button:focus-visible {
+    outline: 1px solid var(--vs-focus-border);
+    outline-offset: -2px;
+}
+
+/* 返回箭头：用 border 拼出向左的箭头，与侧边栏折叠箭头做法一致 */
+.stv-back-arrow {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-left: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg);
+}
+
+/* ========== 工作区：内容居中，超出滚动 ========== */
+.stv-workspace {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    padding: 24px;
+    overflow: auto;
+}
+
+.stv-content {
+    flex-shrink: 0;
+    width: 100%;
+    max-width: 720px;
+    min-width: 0;
+    margin: 0 auto;
+}
+
+.stv-title {
+    margin: 0;
+    color: var(--vs-title-foreground);
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 32px;
+}
+
+.stv-description {
+    margin: 8px 0 24px;
+    color: var(--vs-description-foreground);
+}
+
+/* ========== 分组：带标题的卡片式区块 ========== */
+.stv-section {
+    margin-bottom: 24px;
+    padding: 16px 20px;
+    background-color: var(--vs-sidebar-bg);
+    border: 1px solid var(--vs-widget-border);
+    border-radius: 2px;
+}
+
+.stv-section-title {
+    margin: 0 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--vs-widget-border);
+    color: var(--vs-title-foreground);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 20px;
+}
+
+/* ========== 单行设置项：左侧标签 + 右侧控件，两端对齐 ========== */
+.stv-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 8px 0;
+}
+
+.stv-row + .stv-row {
+    border-top: 1px solid var(--vs-separator);
+}
+
+.stv-row-label {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    color: var(--vs-title-foreground);
+    font-size: 13px;
+    line-height: 20px;
+    cursor: pointer;
+}
+
+.stv-row-hint {
+    color: var(--vs-description-foreground);
+    font-size: 12px;
+    line-height: 18px;
+}
+
+.stv-row-control {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 10px;
+}
+
+/* 语言选择沿用设置页的原生控件外观，并保留系统键盘操作。 */
+.stv-select {
+    min-width: 156px;
+    max-width: 100%;
+    min-height: 30px;
+    padding: 3px 8px;
+    border: 1px solid var(--vs-input-border);
+    border-radius: 2px;
+    background-color: var(--vs-editor-bg);
+    color: var(--vs-foreground);
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 20px;
+    cursor: pointer;
+}
+
+.stv-select:focus-visible {
+    border-color: var(--vs-focus-border);
+    outline: 1px solid var(--vs-focus-border);
+    outline-offset: 1px;
+}
+
+.stv-select:disabled,
+.stv-color-input:disabled,
+.stv-number-input:disabled,
+.stv-switch:disabled,
+.stv-back-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ========== 颜色输入：原生 color picker + 当前色值文本 ========== */
+.stv-color-input {
+    width: 40px;
+    height: 28px;
+    padding: 2px;
+    border: 1px solid var(--vs-input-border);
+    border-radius: 2px;
+    background-color: var(--vs-editor-bg);
+    cursor: pointer;
+}
+
+.stv-color-input:focus-visible {
+    border-color: var(--vs-focus-border);
+    outline: 1px solid var(--vs-focus-border);
+    outline-offset: 1px;
+}
+
+.stv-color-value {
+    min-width: 72px;
+    color: var(--vs-foreground);
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+/* ========== 数字输入：用于布局类数值设置项（如节点宽度） ========== */
+.stv-number-input {
+    width: 72px;
+    height: 28px;
+    padding: 2px 8px;
+    border: 1px solid var(--vs-input-border);
+    border-radius: 2px;
+    background-color: var(--vs-editor-bg);
+    color: var(--vs-foreground);
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 13px;
+    text-align: right;
+}
+
+.stv-number-input:focus-visible {
+    border-color: var(--vs-focus-border);
+    outline: 1px solid var(--vs-focus-border);
+    outline-offset: 1px;
+}
+
+.stv-number-unit {
+    color: var(--vs-description-foreground);
+    font-size: 12px;
+}
+
+/* ========== 开关（switch）：自定义两态按键，替代原生 checkbox ========== */
+.stv-switch {
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+    width: 36px;
+    height: 20px;
+    padding: 0;
+    border: 1px solid var(--vs-input-border);
+    border-radius: 10px;
+    background-color: var(--vs-button-secondary-bg);
+    cursor: pointer;
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease;
+}
+
+.stv-switch-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background-color: var(--vs-editor-bg);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    transition: transform 0.15s ease;
+}
+
+.stv-switch.is-on {
+    background-color: var(--vs-button-bg);
+    border-color: var(--vs-button-bg);
+}
+
+.stv-switch.is-on .stv-switch-thumb {
+    transform: translateX(16px);
+}
+
+.stv-switch:focus-visible {
+    outline: 1px solid var(--vs-focus-border);
+    outline-offset: 1px;
+}
+
+.stv-switch-state {
+    min-width: 48px;
+    color: var(--vs-description-foreground);
+    font-size: 12px;
+}
+
+/* ========== 底部操作区：右侧按键组，左侧未保存提示 ========== */
+.stv-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 0 0;
+    border-top: 1px solid var(--vs-widget-border);
+}
+
+.stv-dirty-hint {
+    color: var(--vs-description-foreground);
+    font-size: 12px;
+}
+
+.stv-save-error {
+    margin: 0 0 12px;
+    padding: 8px 12px;
+    border-left: 2px solid var(--vs-error-foreground);
+    background-color: var(--vs-sidebar-bg);
+    color: var(--vs-error-foreground);
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+.stv-actions-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-left: auto;
+}
+
+/* ========== 通用按键：次要按键与主要按键 ========== */
+.stv-button {
+    padding: 6px 16px;
+    border: 1px solid var(--vs-button-secondary-border);
+    border-radius: 2px;
+    background-color: var(--vs-button-secondary-bg);
+    color: var(--vs-button-secondary-fg);
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 20px;
+    cursor: pointer;
+}
+
+.stv-button:hover:not(:disabled) {
+    background-color: var(--vs-list-hover-bg);
+}
+
+.stv-button:active:not(:disabled) {
+    background-color: var(--vs-list-inactive-selection-bg);
+}
+
+.stv-button:focus-visible {
+    border-color: var(--vs-focus-border);
+    outline: 1px solid var(--vs-focus-border);
+    outline-offset: 1px;
+}
+
+.stv-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.stv-button-primary {
+    border-color: var(--vs-button-bg);
+    background-color: var(--vs-button-bg);
+    color: var(--vs-button-fg);
+}
+
+.stv-button-primary:hover:not(:disabled) {
+    border-color: var(--vs-button-hover-bg);
+    background-color: var(--vs-button-hover-bg);
+}
+
+.stv-button-primary:active:not(:disabled) {
+    border-color: var(--vs-button-hover-bg);
+    background-color: var(--vs-button-hover-bg);
+}
+
+/* ========== 窄屏适配：单列布局，控件换行 ========== */
+@media (max-width: 640px) {
+    .stv-workspace {
+        padding: 16px;
+    }
+
+    .stv-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .stv-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .stv-actions-buttons {
+        justify-content: flex-end;
+    }
+}

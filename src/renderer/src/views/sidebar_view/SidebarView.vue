@@ -4,9 +4,9 @@
         :style="{
             '--sidebar-width': `${sidebarWidth}px`,
             '--sidebar-handle-right': `${handleRight}px`,
-            '--element-info-height': `${sectionStates.elementInfo.height}px`,
-            '--parent-nodes-height': `${sectionStates.parentNodes.height}px`,
-            '--child-nodes-height': `${sectionStates.childNodes.height}px`
+            '--element-info-height': toMaxHeightCss(sectionStates.elementInfo.height),
+            '--parent-nodes-height': toMaxHeightCss(sectionStates.parentNodes.height),
+            '--child-nodes-height': toMaxHeightCss(sectionStates.childNodes.height)
         }"
     >
         <div class="sidebar-content">
@@ -14,7 +14,7 @@
             <section class="sidebar-section">
                 <header
                     class="sidebar-section-header"
-                    title="点击折叠/展开"
+                    :title="t('sidebar.toggleSection')"
                     @click="handleToggleSection(sectionStates.elementInfo)"
                 >
                     <span
@@ -23,7 +23,7 @@
                             'is-collapsed': sectionStates.elementInfo.collapsed
                         }"
                     ></span>
-                    <h2 class="sidebar-section-title">元素信息</h2>
+                    <h2 class="sidebar-section-title">{{ t('sidebar.elementInfo') }}</h2>
                 </header>
                 <Transition name="sidebar-collapse">
                     <div
@@ -36,13 +36,24 @@
                                 :key="row.key"
                                 class="sidebar-info-row"
                             >
-                                <span class="sidebar-info-key">{{ row.key }}</span>
+                                <span class="sidebar-info-key">{{ t(row.key) }}</span>
                                 <!-- 名称行：结构体名前的小眼睛，控制当前选中元素在画布上的显隐 -->
                                 <button
                                     v-if="row.visibilityToggle"
                                     class="sidebar-visibility-toggle"
                                     :class="{ 'is-off': !selectedNodeVisible }"
-                                    :title="selectedNodeVisible ? '隐藏该元素' : '显示该元素'"
+                                    :title="
+                                        t(
+                                            selectedNodeVisible
+                                                ? 'sidebar.hideElement'
+                                                : 'sidebar.showElement'
+                                        )
+                                    "
+                                    :aria-label="
+                                        t(selectedNodeVisible ? 'a11y.hideNode' : 'a11y.showNode', {
+                                            name: row.value
+                                        })
+                                    "
                                     @click="handleToggleSelectedVisible"
                                 >
                                     <span class="sidebar-eye-icon"></span>
@@ -56,7 +67,7 @@
                     <div
                         v-show="!sectionStates.elementInfo.collapsed && elementInfoRows.length > 0"
                         class="sidebar-section-resizer"
-                        title="拖动调节高度"
+                        :title="t('sidebar.resizeSection')"
                         @mousedown="handleStartResizeSection(sectionStates.elementInfo, $event)"
                     ></div>
                 </Transition>
@@ -65,7 +76,7 @@
             <section class="sidebar-section">
                 <header
                     class="sidebar-section-header"
-                    title="点击折叠/展开"
+                    :title="t('sidebar.toggleSection')"
                     @click="handleToggleSection(sectionStates.parentNodes)"
                 >
                     <span
@@ -74,7 +85,7 @@
                             'is-collapsed': sectionStates.parentNodes.collapsed
                         }"
                     ></span>
-                    <h2 class="sidebar-section-title">父节点信息</h2>
+                    <h2 class="sidebar-section-title">{{ t('sidebar.parentNodes') }}</h2>
                 </header>
                 <Transition name="sidebar-collapse">
                     <div
@@ -95,7 +106,12 @@
                                     :class="{
                                         'is-off': !row.visible
                                     }"
-                                    :title="row.visible ? '隐藏该行' : '显示该行'"
+                                    :title="t(row.visible ? 'sidebar.hideRow' : 'sidebar.showRow')"
+                                    :aria-label="
+                                        t(row.visible ? 'a11y.hideNode' : 'a11y.showNode', {
+                                            name: row.label
+                                        })
+                                    "
                                     @click="handleToggleRowVisible(row)"
                                 >
                                     <span class="sidebar-eye-icon"></span>
@@ -109,7 +125,7 @@
                     <div
                         v-show="!sectionStates.parentNodes.collapsed && parentNodes.length > 0"
                         class="sidebar-section-resizer"
-                        title="拖动调节高度"
+                        :title="t('sidebar.resizeSection')"
                         @mousedown="handleStartResizeSection(sectionStates.parentNodes, $event)"
                     ></div>
                 </Transition>
@@ -118,7 +134,7 @@
             <section class="sidebar-section">
                 <header
                     class="sidebar-section-header"
-                    title="点击折叠/展开"
+                    :title="t('sidebar.toggleSection')"
                     @click="handleToggleSection(sectionStates.childNodes)"
                 >
                     <span
@@ -127,7 +143,7 @@
                             'is-collapsed': sectionStates.childNodes.collapsed
                         }"
                     ></span>
-                    <h2 class="sidebar-section-title">子节点信息</h2>
+                    <h2 class="sidebar-section-title">{{ t('sidebar.childNodes') }}</h2>
                 </header>
                 <Transition name="sidebar-collapse">
                     <div
@@ -148,7 +164,12 @@
                                     :class="{
                                         'is-off': !row.visible
                                     }"
-                                    :title="row.visible ? '隐藏该行' : '显示该行'"
+                                    :title="t(row.visible ? 'sidebar.hideRow' : 'sidebar.showRow')"
+                                    :aria-label="
+                                        t(row.visible ? 'a11y.hideNode' : 'a11y.showNode', {
+                                            name: row.label
+                                        })
+                                    "
                                     @click="handleToggleRowVisible(row)"
                                 >
                                     <span class="sidebar-eye-icon"></span>
@@ -162,22 +183,33 @@
                     <div
                         v-show="!sectionStates.childNodes.collapsed && childNodes.length > 0"
                         class="sidebar-section-resizer"
-                        title="拖动调节高度"
+                        :title="t('sidebar.resizeSection')"
                         @mousedown="handleStartResizeSection(sectionStates.childNodes, $event)"
                     ></div>
                 </Transition>
             </section>
         </div>
-        <div class="sidebar-resize-handle" @mousedown="handleStartResize"></div>
+        <div
+            class="sidebar-resize-handle"
+            :title="t('a11y.sidebarResize')"
+            @mousedown="handleStartResize"
+        ></div>
     </div>
 </template>
 
 <script lang="ts" setup>
 import { toRef } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useSidebarView } from './useSidebarView'
 import type { StructNodeData, StructNodeRecord } from '@/views/canvas_view/useCanvasView'
 import './SidebarView.css'
 
+/** 将 height 数值映射为 CSS `max-height` 可接受的字符串：`null` → `none`（无上限），数值 → `${n}px` */
+function toMaxHeightCss(height: number | null): string {
+    return height === null ? 'none' : `${height}px`
+}
+
+const { t } = useI18n({ useScope: 'global' })
 const props = defineProps<{
     selectedNode: StructNodeData | null
     /** 画布上已渲染节点的 id（hash）列表：用于同步父/子节点行的眼睛显隐初值 */

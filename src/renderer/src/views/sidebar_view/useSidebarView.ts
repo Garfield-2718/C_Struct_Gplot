@@ -1,6 +1,7 @@
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import type { ComputedRef, Ref } from 'vue'
 import type { StructNodeData, StructNodeRecord } from '@/views/canvas_view/useCanvasView'
+import type { MessageKey } from '../../../../shared/locales/types'
 
 /** 侧边栏宽度允许的范围（px） */
 const MIN_SIDEBAR_WIDTH = 160
@@ -10,21 +11,23 @@ const DEFAULT_SIDEBAR_WIDTH = 280
 /** 拖拽热区宽度（px）：手柄覆盖侧边栏右缘一小段区域 */
 const HANDLE_SIZE = 8
 
-/** 分段内容区 max-height 上限允许的范围（px）：下限为 0，可拖动收拢至完全不展示 */
+/** 分段内容区 max-height 下限（px）：可拖动收拢至 0 完全不展示；取消上限，默认无限制完整展示内容 */
 const MIN_SECTION_HEIGHT = 0
-const MAX_SECTION_HEIGHT = 400
 
 /** 分段状态：支持点击标题栏折叠/展开，拖动底边框调节内容区 max-height 上限 */
 export interface SidebarSectionState {
     /** 是否折叠 */
     collapsed: boolean
-    /** 展开时内容区 max-height 上限（px）：内容不足则按内容收缩不留白，超出则内部滚动 */
-    height: number
+    /**
+     * 展开时内容区 max-height 上限（px）；`null` 表示无上限（CSS 映射为 `max-height: none`）。
+     * 内容不足则按内容收缩不留白，超出上限则内部滚动。
+     */
+    height: number | null
 }
 
 /** 元素信息行：描述当前选中元素的键值对，值过长时自动换行并撑高本行 */
 export interface SidebarInfoRow {
-    key: string
+    key: MessageKey
     value: string
     /** 是否在值前渲染「选中元素显隐」小眼睛（仅名称行）：点击切换选中元素在画布上的显隐 */
     visibilityToggle?: boolean
@@ -121,16 +124,21 @@ export function useSidebarView(
 
     onBeforeUnmount(handleMouseUp)
 
-    /** 三段初始状态：默认展开，内容区 max-height 上限按行数预留（行高 28px） */
+    /** 三段初始状态：默认展开，内容区 max-height 上限为 null（无限制）；
+     * 由于 CSS 采用 max-height + 内容自适应，内容多长就展示多长，侧边栏自身溢出时由 .sidebar-content 滚动 */
     const sectionStates = reactive({
-        elementInfo: { collapsed: false, height: 112 },
-        parentNodes: { collapsed: false, height: 96 },
-        childNodes: { collapsed: false, height: 96 }
+        elementInfo: { collapsed: false, height: null },
+        parentNodes: { collapsed: false, height: null },
+        childNodes: { collapsed: false, height: null }
     })
 
-    /** 点击标题栏切换分段折叠/展开 */
+    /** 点击标题栏切换分段折叠/展开：展开时同步将 max-height 上限重置为 null（无限制），
+     * 避免之前拖动缩小后、折叠再展开时内容仍被截断需手动拉伸 */
     function handleToggleSection(section: SidebarSectionState): void {
         section.collapsed = !section.collapsed
+        if (!section.collapsed) {
+            section.height = null
+        }
     }
 
     /** 分段高度拖拽上下文：目标分段与按下时的起点快照 */
@@ -140,13 +148,10 @@ export function useSidebarView(
 
     function handleSectionMouseMove(event: MouseEvent): void {
         if (!sectionResizeTarget) return
-        // 分段自上而下排列，向下拖动（位移为正）时 max-height 上限增大
+        // 分段自上而下排列，向下拖动（位移为正）时 max-height 上限增大；不再封顶，仅受下限 0 约束
         const delta = event.clientY - sectionResizeStartY
         const next = sectionResizeStartHeight + delta
-        sectionResizeTarget.height = Math.min(
-            MAX_SECTION_HEIGHT,
-            Math.max(MIN_SECTION_HEIGHT, next)
-        )
+        sectionResizeTarget.height = Math.max(MIN_SECTION_HEIGHT, next)
     }
 
     function handleSectionMouseUp(): void {
@@ -160,7 +165,23 @@ export function useSidebarView(
         event.preventDefault()
         sectionResizeTarget = section
         sectionResizeStartY = event.clientY
-        sectionResizeStartHeight = section.height
+        // height 为 null 时无上限，拖拽需要一个具体数值起点：以内容区当前 content-box 高度作为初始值，
+        // 避免 null 与 delta 相加无意义、也避免一拖就弹回无限制；
+        // max-height 默认约束 content-box，而 clientHeight = content + padding，需减去上下 padding 才与 max-height 对齐
+        if (section.height === null) {
+            const resizerEl = event.currentTarget as HTMLElement | null
+            const bodyEl =
+                resizerEl?.parentElement?.querySelector<HTMLElement>('.sidebar-section-body')
+            if (bodyEl) {
+                const cs = window.getComputedStyle(bodyEl)
+                const paddingY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)
+                sectionResizeStartHeight = Math.max(0, bodyEl.clientHeight - paddingY)
+            } else {
+                sectionResizeStartHeight = 0
+            }
+        } else {
+            sectionResizeStartHeight = section.height
+        }
         window.addEventListener('mousemove', handleSectionMouseMove)
         window.addEventListener('mouseup', handleSectionMouseUp)
     }
@@ -188,6 +209,19 @@ export function useSidebarView(
     /** 防止快速切换选中节点时旧异步查询覆盖新结果的序号守卫 */
     let querySeq = 0
 
+    /**
+     * 根据内容有无自动折叠/展开分段；当分段从「折叠」跳变到「展开」时，
+     * 同步将 max-height 上限重置为 null（无限制），确保新内容不被旧的小高度截断。
+     * 已处于展开态的分段保持当前 height，尊重用户手动拖拽的自定义高度。
+     */
+    function applySectionCollapse(section: SidebarSectionState, hasContent: boolean): void {
+        const nextCollapsed = !hasContent
+        if (section.collapsed && !nextCollapsed) {
+            section.height = null
+        }
+        section.collapsed = nextCollapsed
+    }
+
     watch(
         selectedNode,
         async (node) => {
@@ -197,9 +231,9 @@ export function useSidebarView(
                 parentNodes.value = []
                 childNodes.value = []
                 // 无选中元素：三段内容均为空，全部默认折叠
-                sectionStates.elementInfo.collapsed = true
-                sectionStates.parentNodes.collapsed = true
-                sectionStates.childNodes.collapsed = true
+                applySectionCollapse(sectionStates.elementInfo, false)
+                applySectionCollapse(sectionStates.parentNodes, false)
+                applySectionCollapse(sectionStates.childNodes, false)
                 return
             }
 
@@ -207,13 +241,13 @@ export function useSidebarView(
             const displayName = node.title.replace(/\s*\(\w+\)$/, '')
             elementInfoRows.value = [
                 // 名称行带小眼睛：控制当前选中元素在画布上的显隐（与父/子节点行眼睛一致）
-                { key: '名称', value: displayName, visibilityToggle: true },
-                { key: '类型', value: node.kind },
-                { key: '源文件', value: node.sourceFile ?? '' },
-                { key: '字段数', value: String(node.fields?.length ?? 0) }
+                { key: 'sidebar.name', value: displayName, visibilityToggle: true },
+                { key: 'sidebar.type', value: node.kind },
+                { key: 'sidebar.sourceFile', value: node.sourceFile ?? '' },
+                { key: 'sidebar.fieldCount', value: String(node.fields?.length ?? 0) }
             ]
-            // 内容为空则该段默认折叠，非空则展开
-            sectionStates.elementInfo.collapsed = elementInfoRows.value.length === 0
+            // 内容为空则该段默认折叠，非空则展开（跳变时同步重置 max-height 上限）
+            applySectionCollapse(sectionStates.elementInfo, elementInfoRows.value.length > 0)
 
             // 父节点列表：去重后将 parentHashes 解析为可读标题
             // 与子节点侧一致做 Set 去重：主进程 findParentHashes 已用 SELECT DISTINCT 在 DB 层去重，
@@ -229,7 +263,7 @@ export function useSidebarView(
                 visible: canvasNodeIds.value.includes(hash)
             }))
             // 无父节点则该段默认折叠
-            sectionStates.parentNodes.collapsed = parentNodes.value.length === 0
+            applySectionCollapse(sectionStates.parentNodes, parentNodes.value.length > 0)
 
             // 子节点列表：去重并过滤空值后解析为可读标题
             const childHashes = [
@@ -247,7 +281,7 @@ export function useSidebarView(
                 visible: canvasNodeIds.value.includes(hash)
             }))
             // 无子节点则该段默认折叠
-            sectionStates.childNodes.collapsed = childNodes.value.length === 0
+            applySectionCollapse(sectionStates.childNodes, childNodes.value.length > 0)
         },
         { immediate: true }
     )

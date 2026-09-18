@@ -1,15 +1,14 @@
-import { ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import { errorMessageKey } from '../../../../shared/errors'
+import type { AppError, ImportDbResult, ProcessProjectResult } from '../../../../shared/errors'
 
 const DESIGN_WIDTH = 1920
 const DESIGN_HEIGHT = 1080
 
 /** import-db-file 通道返回结构，与主进程 ipc-handlers.ts 对齐 */
-interface ImportDbResult {
-    status: 'success' | 'failure'
-    message?: string
-    dbPath?: string
-}
+type ImportFailure = AppError
 
 /** 导入项目页的组合式函数：画布自适应缩放 + 文件选择/拖入 */
 export function useImportProject() {
@@ -19,16 +18,20 @@ export function useImportProject() {
     let lastDropTime = 0
     let observer: ResizeObserver | null = null
     const router = useRouter()
+    const { t } = useI18n({ useScope: 'global' })
 
     /** 错误提示弹窗状态：校验/导入失败时展示具体原因 */
     const errorVisible = ref(false)
-    const errorTitle = ref('操作失败')
-    const errorMessage = ref('')
+    const error = ref<ImportFailure | null>(null)
+    const errorTitle = computed(() => t('import.databaseFailed'))
+    const errorMessage = computed(() =>
+        error.value ? t(errorMessageKey(error.value.code), error.value.params ?? {}) : ''
+    )
+    const errorDetail = computed(() => error.value?.detail ?? '')
 
     /** 弹出错误提示：记录标题与详情并显示弹窗 */
-    function showError(title: string, message: string): void {
-        errorTitle.value = title
-        errorMessage.value = message
+    function showError(failure: AppError): void {
+        error.value = failure
         errorVisible.value = true
     }
 
@@ -71,7 +74,7 @@ export function useImportProject() {
         router.push('/loading')
 
         // 等待主进程返回：成功进入 canvas 页面，失败返回导入页
-        const result = await processing
+        const result = (await processing) as ProcessProjectResult | undefined
         if (result?.status === 'success') {
             router.replace('/canvas')
         } else {
@@ -85,20 +88,32 @@ export function useImportProject() {
      * 成功则直接进入画布页（无需 CLI 解析，故不经过 loading 页），失败则留在本页并打印原因。
      */
     async function handleSelectDb(): Promise<void> {
-        const dbPath = await window.electron.ipcRenderer.invoke('select-db-file')
-        if (!dbPath) {
-            console.log('[DbSelect] Cancelled')
-            return
-        }
-        console.log('[DbSelect] Selected:', dbPath)
-        const result = (await window.electron.ipcRenderer.invoke('import-db-file', dbPath)) as
-            ImportDbResult | undefined
-        if (result?.status === 'success') {
-            console.log('[DbSelect] 导入成功，活动数据库:', result.dbPath)
-            router.push('/canvas')
-        } else {
-            console.error('[DbSelect] 导入失败:', result?.message)
-            showError('导入数据库失败', result?.message ?? '未知错误')
+        try {
+            const dbPath = await window.electron.ipcRenderer.invoke('select-db-file')
+            if (!dbPath) {
+                console.log('[DbSelect] Cancelled')
+                return
+            }
+            console.log('[DbSelect] Selected:', dbPath)
+            const result = (await window.electron.ipcRenderer.invoke('import-db-file', dbPath)) as
+                ImportDbResult | undefined
+            if (result?.status === 'success') {
+                console.log('[DbSelect] 导入成功，活动数据库:', result.dbPath)
+                router.push('/canvas')
+            } else {
+                console.error('[DbSelect] 导入失败:', result)
+                showError(
+                    result?.error ?? {
+                        code: 'DB_IMPORT_FAILED',
+                        detail: result?.message
+                    }
+                )
+            }
+        } catch (cause) {
+            showError({
+                code: 'DB_IMPORT_FAILED',
+                detail: cause instanceof Error ? cause.message : String(cause)
+            })
         }
     }
 
@@ -125,6 +140,7 @@ export function useImportProject() {
         errorVisible,
         errorTitle,
         errorMessage,
+        errorDetail,
         handleDismissError
     }
 }

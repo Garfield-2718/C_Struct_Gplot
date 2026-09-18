@@ -1,6 +1,7 @@
 import { app, ipcMain } from 'electron'
 import { execFile } from 'child_process'
 import { join } from 'path'
+import type { AppError } from '../shared/errors'
 
 // 平台映射（共享契约，必须与 scripts/build-cli.mjs 完全一致）
 const systemTag =
@@ -21,6 +22,7 @@ export interface CliResult {
     code: number
     stdout: string
     stderr: string
+    error?: AppError
 }
 
 /** CLI 子进程超时（毫秒），防止挂起拖垮主进程 */
@@ -48,7 +50,12 @@ export function spawnCli(args: string[]): Promise<CliResult> {
                         resolve({
                             code: 1,
                             stdout: stdout ?? '',
-                            stderr: `[cli-service] 进程超时（${CLI_TIMEOUT_MS}ms），已终止`
+                            stderr: stderr || err.message,
+                            error: {
+                                code: 'CLI_TIMEOUT',
+                                params: { timeout: CLI_TIMEOUT_MS },
+                                detail: [err.message, stderr].filter(Boolean).join('\n')
+                            }
                         })
                         return
                     }
@@ -58,7 +65,12 @@ export function spawnCli(args: string[]): Promise<CliResult> {
                     resolve({
                         code: typeof err.code === 'number' ? err.code : 1,
                         stdout: stdout ?? '',
-                        stderr: stderrContent
+                        stderr: stderrContent,
+                        error: {
+                            code: 'CLI_FAILED',
+                            params: { exitCode: err.code ?? 1 },
+                            detail: [err.message, stderr].filter(Boolean).join('\n')
+                        }
                     })
                     return
                 }

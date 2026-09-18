@@ -1,5 +1,5 @@
 <template>
-    <div class="struct-node" :style="{ width: `${data.width}px` }">
+    <div class="struct-node" :style="{ width: `${nodeWidth}px` }">
         <div class="struct-node-header" :class="`struct-node-header-${headerKind}`">
             <!-- 标题栏左右各一个入线吸附点：编辑模式下可把连线目标端拖到另一侧 -->
             <Handle
@@ -50,10 +50,15 @@ import { computed } from 'vue'
 import { Handle, Position } from '@vue-flow/core'
 import type { NodeProps } from '@vue-flow/core'
 import type { StructNodeData } from '../useCanvasView'
+import { useSettings } from '@/stores/settings'
 import './StructNode.css'
 
 const props = defineProps<NodeProps<StructNodeData>>()
+const globalSettings = useSettings()
 
 /** 标题栏颜色种类：折叠节点统一为紫色，其余按元素类型 */
 const headerKind = computed(() => (props.data.collapsed ? 'collapsed' : props.data.kind))
+
+/** 实际渲染宽度：取数据中的宽度与用户配置的最大宽度的较小值 */
+const nodeWidth = computed(() => Math.min(props.data.width, globalSettings.nodeMaxWidth))
 </script>

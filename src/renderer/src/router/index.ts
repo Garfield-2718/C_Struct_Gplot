@@ -18,6 +18,12 @@ const routes: RouteRecordRaw[] = [
         name: 'Canvas',
         component: () => import('@/views/canvas_view/CanvasView.vue'),
         meta: { guid: '12:01' }
+    },
+    {
+        path: '/settings',
+        name: 'Settings',
+        component: () => import('@/views/settings_view/SettingsView.vue'),
+        meta: { guid: '13:01' }
     }
 ]
 

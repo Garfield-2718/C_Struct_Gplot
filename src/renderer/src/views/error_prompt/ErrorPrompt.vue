@@ -26,9 +26,15 @@
                         <path d="M12 7.5v5.5" />
                         <path d="M12 16.5h.01" />
                     </svg>
-                    <span id="errp-title" class="errp-title">{{ title }}</span>
+                    <span id="errp-title" class="errp-title">{{
+                        title ?? t('common.operationFailed')
+                    }}</span>
                 </div>
                 <p id="errp-message" class="errp-message">{{ message }}</p>
+                <details v-if="detail" class="errp-details">
+                    <summary>{{ t('common.technicalDetails') }}</summary>
+                    <pre class="errp-message">{{ detail }}</pre>
+                </details>
                 <div class="errp-actions">
                     <button
                         ref="confirmButtonRef"
@@ -36,7 +42,7 @@
                         class="errp-button errp-button-primary"
                         @click="handleClose"
                     >
-                        确定
+                        {{ t('common.ok') }}
                     </button>
                 </div>
             </div>
@@ -46,19 +52,20 @@
 
 <script lang="ts" setup>
 import { ref, watch, nextTick, onBeforeUnmount } from 'vue'
+import { useI18n } from 'vue-i18n'
 import './ErrorPrompt.css'
 
-const props = withDefaults(
-    defineProps<{
-        /** 是否显示错误提示弹窗 */
-        visible: boolean
-        /** 错误详情文本（支持多行，长文本自动折行） */
-        message: string
-        /** 弹窗标题，默认「操作失败」 */
-        title?: string
-    }>(),
-    { title: '操作失败' }
-)
+const { t } = useI18n({ useScope: 'global' })
+const props = defineProps<{
+    /** 是否显示错误提示弹窗 */
+    visible: boolean
+    /** 错误详情文本（支持多行，长文本自动折行） */
+    message: string
+    /** 弹窗标题，默认「操作失败」 */
+    title?: string
+    /** 原始诊断信息按原样保留，不参与翻译。 */
+    detail?: string
+}>()
 
 const emit = defineEmits<{ (e: 'close'): void }>()
 

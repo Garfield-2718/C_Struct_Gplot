@@ -2,6 +2,10 @@ import { app } from 'electron'
 import { join, dirname } from 'path'
 import { existsSync, readdirSync } from 'fs'
 import { DatabaseSync } from 'node:sqlite'
+import { errorMessageKey } from '../shared/errors'
+import type { AppError } from '../shared/errors'
+import { translate } from '../shared/locales/translate'
+import { getSettingsLocale } from './settings-service'
 
 /**
  * 主进程读取 C_Struct_Gplot_CLI（init 模式）生成的 SQLite 数据库的模块。
@@ -52,9 +56,15 @@ export function getActiveDbPath(): string | null {
 }
 
 /** 数据库结构校验结果：ok 为是否通过，message 为通过/未通过的具体说明 */
-export interface DbValidationResult {
-    ok: boolean
-    message: string
+export type DbValidationResult =
+    { ok: true; message: string } | { ok: false; message: string; error: AppError }
+
+function validationFailure(error: AppError): DbValidationResult {
+    return {
+        ok: false,
+        error,
+        message: translate(getSettingsLocale(), errorMessageKey(error.code), error.params)
+    }
 }
 
 /**
@@ -101,7 +111,10 @@ export function validateStructDb(dbPath: string): DbValidationResult {
     try {
         db = new DatabaseSync(dbPath, { readOnly: true })
     } catch (err) {
-        return { ok: false, message: `无法作为 SQLite 数据库打开: ${(err as Error).message}` }
+        return validationFailure({
+            code: 'DB_OPEN_FAILED',
+            detail: err instanceof Error ? err.message : String(err)
+        })
     }
     try {
         // 逐表校验：表必须存在（PRAGMA 返回非空）且包含全部必需字段
@@ -112,22 +125,25 @@ export function validateStructDb(dbPath: string): DbValidationResult {
         for (const [table, required] of checks) {
             const actual = readTableColumns(db, table)
             if (actual.length === 0) {
-                return { ok: false, message: `缺少 ${table} 表` }
+                return validationFailure({ code: 'DB_TABLE_MISSING', params: { table } })
             }
             const actualSet = new Set(actual)
             const missing = required.filter((column) => !actualSet.has(column))
             if (missing.length > 0) {
-                return { ok: false, message: `${table} 表缺少字段: ${missing.join(', ')}` }
+                return validationFailure({
+                    code: 'DB_COLUMNS_MISSING',
+                    params: { table, columns: missing.join(', ') }
+                })
             }
         }
-        return { ok: true, message: '数据库结构校验通过' }
+        return { ok: true, message: translate(getSettingsLocale(), 'native.databaseValidated') }
     } catch (err) {
-        const reason = (err as Error).message
+        const reason = err instanceof Error ? err.message : String(err)
         // SQLite 打开为惰性：非数据库文件直到首次查询才报错，此处归一为更清晰的提示
-        if (reason.includes('not a database')) {
-            return { ok: false, message: '文件不是有效的 SQLite 数据库' }
+        if ((err as { errcode?: number } | null)?.errcode === 26) {
+            return validationFailure({ code: 'DB_INVALID', detail: reason })
         }
-        return { ok: false, message: `校验数据库结构时出错: ${reason}` }
+        return validationFailure({ code: 'DB_VALIDATION_FAILED', detail: reason })
     } finally {
         db.close()
     }

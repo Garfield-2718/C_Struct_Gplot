@@ -62,6 +62,8 @@
 }
 
 .sidebar-panel .sidebar-section-title {
+    min-width: 0;
+    overflow-wrap: anywhere;
     margin: 0;
     font-size: 13px;
     font-weight: 600;
@@ -109,6 +111,7 @@
 .sidebar-panel .sidebar-info-key {
     flex-shrink: 0;
     width: 56px;
+    overflow-wrap: anywhere;
     color: var(--vs-description-foreground);
 }
 

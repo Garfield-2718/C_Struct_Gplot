@@ -18,15 +18,15 @@
 }
 
 .struct-node-header-struct {
-    background: #4a90d9;
+    background: var(--color-struct, #4a90d9);
 }
 
 .struct-node-header-enum {
-    background: #50a050;
+    background: var(--color-enum, #50a050);
 }
 
 .struct-node-header-union {
-    background: #e8743b;
+    background: var(--color-union, #e8743b);
 }
 
 .struct-node-header-collapsed {
@@ -82,9 +82,9 @@
     color: #7a5299;
 }
 
-/* ========== 选中态：边框变红色且加粗到 3px（Vue Flow 选中节点时自动添加 .selected 类） ========== */
+/* ========== 选中态：边框变色且加粗到 3px（Vue Flow 选中节点时自动添加 .selected 类） ========== */
 .vue-flow__node.selected .struct-node {
-    border-color: #ff0000;
+    border-color: var(--color-selected-border, #ff0000);
     border-width: 3px;
 }
 

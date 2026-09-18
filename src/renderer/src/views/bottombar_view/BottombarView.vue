@@ -3,7 +3,9 @@
         <!-- 收起/展开手柄：展开态三角向下，收起态三角向上 -->
         <button
             class="bottombar-collapse-handle"
-            :title="collapsed ? '展开底边栏' : '收起底边栏'"
+            :title="t(collapsed ? 'bottombar.expand' : 'bottombar.collapse')"
+            :aria-label="t(collapsed ? 'bottombar.expand' : 'bottombar.collapse')"
+            :aria-expanded="!collapsed"
             @click="handleToggleCollapse"
         >
             <span class="bottombar-collapse-arrow"></span>
@@ -16,17 +18,21 @@
                     :class="{ 'bottombar-tool-button-active': mode === 'edit' }"
                     :title="
                         mode === 'edit'
-                            ? '当前：编辑模式（点击切回选择模式）'
-                            : '当前：选择模式（点击进入编辑模式）'
+                            ? t('bottombar.editModeHint')
+                            : t('bottombar.selectModeHint')
                     "
                     :aria-pressed="mode === 'edit'"
                     @click="handleModeToggleClick"
                 >
-                    {{ mode === 'edit' ? '编辑模式' : '选择模式' }}
+                    {{ t(mode === 'edit' ? 'bottombar.editMode' : 'bottombar.selectMode') }}
                 </button>
                 <!-- 其余工具按键：设计文档另规划 添加节点/拖动模式/导出，当前放置添加节点 -->
-                <button class="bottombar-tool-button" title="添加节点" @click="handleAddNodeClick">
-                    添加节点
+                <button
+                    class="bottombar-tool-button"
+                    :title="t('bottombar.addNode')"
+                    @click="handleAddNodeClick"
+                >
+                    {{ t('bottombar.addNode') }}
                 </button>
             </div>
         </div>
@@ -39,24 +45,32 @@
             class="add-node-overlay"
             @click.self="handleAddNodeCancel"
         >
-            <div class="add-node-dialog" role="dialog" aria-modal="true">
-                <div class="add-node-title">添加节点</div>
+            <div
+                class="add-node-dialog"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="add-node-title"
+            >
+                <div id="add-node-title" class="add-node-title">{{ t('bottombar.addNode') }}</div>
                 <input
                     ref="addNodeInputRef"
                     v-model="newNodeName"
                     class="add-node-input"
                     type="text"
-                    placeholder="请输入要新增的节点"
+                    :placeholder="t('bottombar.nodePlaceholder')"
+                    :aria-label="t('a11y.addNodeInput')"
                     @keyup.enter="handleAddNodeConfirm"
                     @keyup.esc="handleAddNodeCancel"
                 />
                 <div class="add-node-actions">
-                    <button class="add-node-button" @click="handleAddNodeCancel">取消</button>
+                    <button class="add-node-button" @click="handleAddNodeCancel">
+                        {{ t('common.cancel') }}
+                    </button>
                     <button
                         class="add-node-button add-node-button-primary"
                         @click="handleAddNodeConfirm"
                     >
-                        确认
+                        {{ t('common.confirm') }}
                     </button>
                 </div>
             </div>
@@ -66,6 +80,7 @@
 
 <script lang="ts" setup>
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useBottombarView } from './useBottombarView'
 import type { StructNodeRecord, CanvasMode } from '@/views/canvas_view/useCanvasView'
 import './BottombarView.css'
@@ -81,6 +96,7 @@ const emit = defineEmits<{
 
 /** 对话框输入框引用：本地声明并绑定到模板 ref，交由组合式函数在打开时聚焦 */
 const addNodeInputRef = ref<HTMLInputElement | null>(null)
+const { t } = useI18n({ useScope: 'global' })
 
 const {
     collapsed,

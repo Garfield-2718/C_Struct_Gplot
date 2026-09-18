@@ -17,6 +17,8 @@
     box-sizing: border-box;
     width: 420px;
     max-width: calc(100vw - 48px);
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
     padding: 20px;
     background-color: var(--vs-editor-bg);
     border: 1px solid var(--vs-widget-border);
@@ -38,6 +40,8 @@
 }
 
 .errp-title {
+    min-width: 0;
+    overflow-wrap: anywhere;
     font-size: 15px;
     font-weight: 600;
     line-height: 22px;
@@ -45,6 +49,16 @@
 }
 
 /* 错误详情：保留换行并允许长文本折行，避免超出面板 */
+.errp-details {
+    font-size: 12px;
+    user-select: text;
+}
+
+.errp-details summary {
+    margin-bottom: 8px;
+    cursor: pointer;
+}
+
 .errp-message {
     margin: 0;
     font-size: 13px;

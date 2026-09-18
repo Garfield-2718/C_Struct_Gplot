@@ -1,18 +1,20 @@
-import { ref, watch, markRaw, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, watch, markRaw, computed, onActivated, onDeactivated } from 'vue'
 import type { Ref, ComputedRef } from 'vue'
-import type {
-    Connection,
-    Edge,
-    EdgeTypesObject,
-    EdgeUpdateEvent,
-    GraphEdge,
-    GraphNode,
-    Node,
-    NodeTypesObject,
-    ViewportTransform
+import {
+    useVueFlow,
+    type Connection,
+    type Edge,
+    type EdgeTypesObject,
+    type EdgeUpdateEvent,
+    type GraphEdge,
+    type GraphNode,
+    type Node,
+    type NodeTypesObject,
+    type ViewportTransform
 } from '@vue-flow/core'
 import StructNode from './struct_node/StructNode.vue'
 import FlowArrowEdge from './flow_arrow_edge/FlowArrowEdge.vue'
+import { useSettings } from '@/stores/settings'
 
 /**
  * 自定义节点类型注册：struct 卡片节点。
@@ -79,10 +81,6 @@ export interface StructNodeRecord {
 /** 连线样式：与 SVG 一致的灰色曲线，无箭头 */
 const EDGE_STYLE = { stroke: '#999999', strokeWidth: 1.5 }
 
-/** 选中元素关联连线的颜色：指向子节点的连线（选中节点作为 source）高亮为蓝色 */
-const SELECTED_EDGE_COLOR_CHILD = '#2563eb'
-/** 指向父节点的连线（选中节点作为 target）高亮为紫色 */
-const SELECTED_EDGE_COLOR_PARENT = '#9333ea'
 /** 高亮连线的统一线宽（px）：选中时父/子节点连线均加粗到 3px */
 const SELECTED_EDGE_WIDTH = 3
 
@@ -137,6 +135,9 @@ interface CanvasViewApi {
 
 /** Canvas 页面的组合式函数：基于 Vue Flow 的节点编辑器 */
 export function useCanvasView(): CanvasViewApi {
+    const { viewport, dimensions } = useVueFlow()
+    const globalSettings = useSettings()
+
     const nodes = ref([]) as Ref<Node[]>
     const edges = ref([]) as Ref<Edge[]>
 
@@ -151,7 +152,7 @@ export function useCanvasView(): CanvasViewApi {
     /** 是否处于编辑模式：后续用于门控「连线吸附点左右调整」等编辑能力 */
     const isEditMode = computed(() => canvasMode.value === 'edit')
 
-    /** 已动态新增的节点数：用于错开新节点位置，避免相互重叠 */
+    /** 已动态新增的节点数：用于在视口中心施加递增偏移，避免多节点完全重叠 */
     let addedNodeCount = 0
 
     /** 背景点阵间距（流坐标），随缩放动态回绕，使屏幕点距保持在 [MIN_SCREEN_GAP, MAX_SCREEN_GAP] */
@@ -177,32 +178,34 @@ export function useCanvasView(): CanvasViewApi {
 
     /** 节点选中状态变化时的触发逻辑：高亮关联连线（流动箭头）并同步选中节点数据给侧边栏 */
     function handleSelectionChange(selectedNodes: Node[]): void {
-        // 高亮与选中节点相连的连线，改用 flowArrow 自定义连线：箭头沿路径从起点流动到终点，以区分父/子方向：
-        // - 选中节点作为 target（连线来自父节点）→ 紫色，箭头由父节点流向选中节点
-        // - 选中节点作为 source（连线指向子节点）→ 蓝色，箭头由选中节点流向子节点
-        // - 高亮连线加粗到 SELECTED_EDGE_WIDTH；其余恢复默认灰色贝塞尔连线、无箭头
+        // 高亮与选中节点相连的连线，颜色从全局设置读取：
+        // - 选中节点作为 target（连线来自父节点）→ parentEdgeColor
+        // - 选中节点作为 source（连线指向子节点）→ childEdgeColor
+        // - flowAnimationEnabled 为 true 时使用 flowArrow 自定义连线（流动箭头动画）；否则仅加粗+变色
         const selectedIds = new Set(selectedNodes.map((node) => node.id))
+        const childColor = globalSettings.childEdgeColor
+        const parentColor = globalSettings.parentEdgeColor
+        const animationEnabled = globalSettings.flowAnimationEnabled
         edges.value = edges.value.map((edge) => {
             let stroke = EDGE_STYLE.stroke
             let strokeWidth = EDGE_STYLE.strokeWidth
             let highlighted = false
             if (selectedIds.has(edge.target)) {
-                // 选中节点是 target → source 是其父节点 → 紫色（流入选中节点）
-                stroke = SELECTED_EDGE_COLOR_PARENT
+                // 选中节点是 target → source 是其父节点
+                stroke = parentColor
                 strokeWidth = SELECTED_EDGE_WIDTH
                 highlighted = true
             } else if (selectedIds.has(edge.source)) {
-                // 选中节点是 source → target 是其子节点 → 蓝色（流出到子节点）
-                stroke = SELECTED_EDGE_COLOR_CHILD
+                // 选中节点是 source → target 是其子节点
+                stroke = childColor
                 strokeWidth = SELECTED_EDGE_WIDTH
                 highlighted = true
             }
             return {
                 ...edge,
-                // 高亮连线改用自定义 flowArrow 类型：箭头沿路径从起点流动到终点；其余用默认贝塞尔连线
-                type: highlighted ? 'flowArrow' : undefined,
+                // 高亮连线且动画开启时用 flowArrow 自定义类型；否则用默认贝塞尔连线
+                type: highlighted && animationEnabled ? 'flowArrow' : undefined,
                 style: { ...EDGE_STYLE, stroke, strokeWidth },
-                // 不再使用吸附在节点上的静态箭头(markerEnd)与虚线动画(animated)，流动效果由 flowArrow 内部渲染
                 animated: false,
                 markerEnd: undefined
             }
@@ -225,6 +228,22 @@ export function useCanvasView(): CanvasViewApi {
                 .map((node) => node.id)
                 .join(','),
         () => handleSelectionChange(nodes.value.filter((node) => (node as GraphNode).selected))
+    )
+
+    /**
+     * 监听全局设置中的颜色/动画开关变化：设置页保存后即时重新应用连线样式，
+     * 无需等到下次选中变化才生效。
+     */
+    watch(
+        () => [
+            globalSettings.childEdgeColor,
+            globalSettings.parentEdgeColor,
+            globalSettings.flowAnimationEnabled
+        ],
+        () => {
+            const selected = nodes.value.filter((node) => (node as GraphNode).selected)
+            if (selected.length > 0) handleSelectionChange(selected)
+        }
     )
 
     /**
@@ -369,9 +388,17 @@ export function useCanvasView(): CanvasViewApi {
             console.error('[canvas] 解析节点 ui_json 失败:', err)
             return
         }
-        // 简单网格布局：画布初始为空，新节点从左上角起按 4 列错位排布，避免相互重叠
-        const x = 40 + (addedNodeCount % 4) * 300
-        const y = 40 + Math.floor(addedNodeCount / 4) * 240
+        // 将新节点放置在当前屏幕视口中心；多次添加时施加小偏移避免完全重叠
+        // viewport / dimensions 为 Vue Flow store 中的 Ref，在 script 中必须 .value 才能拿到实际值
+        const { x: vx, y: vy, zoom } = viewport.value
+        const { width, height } = dimensions.value
+        // 兜底：store 尚未初始化时 width/height/zoom 可能为 0，避免除零得到 Infinity/NaN 导致节点不可见
+        const safeZoom = zoom > 0 ? zoom : 1
+        const centerX = (width / 2 - vx) / safeZoom
+        const centerY = (height / 2 - vy) / safeZoom
+        const offset = addedNodeCount * 30
+        const x = centerX - (data.width ?? 240) / 2 + offset
+        const y = centerY - 60 + offset
         addedNodeCount++
         nodes.value = [...nodes.value, createStructNode(record.hash, x, y, data)]
         // 自动连线：仅连接画布上已存在的节点（正/反向），去重后并入 edges
@@ -443,9 +470,10 @@ export function useCanvasView(): CanvasViewApi {
     }
 
     // 全局监听 keydown：编辑器画布本身不一定持有焦点（点击空白/侧边栏后仍希望 Delete 生效），
-    // 故挂在 window 上，仅在编辑模式下响应；组件卸载时移除监听，避免内存泄漏与跨页残留。
-    onMounted(() => window.addEventListener('keydown', handleDeleteKeyDown))
-    onBeforeUnmount(() => window.removeEventListener('keydown', handleDeleteKeyDown))
+    // 故挂在 window 上，仅在编辑模式下响应；
+    // 使用 onActivated/onDeactivated 配合 keep-alive：导航到设置页时移除监听，返回时重新挂载。
+    onActivated(() => window.addEventListener('keydown', handleDeleteKeyDown))
+    onDeactivated(() => window.removeEventListener('keydown', handleDeleteKeyDown))
 
     return {
         nodes,
