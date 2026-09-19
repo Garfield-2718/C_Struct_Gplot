@@ -288,6 +288,9 @@ export interface AppInfo {
 /** 应用作者 */
 const APP_AUTHOR = 'Garfield-2718'
 
+/** 应用版本号 */
+const APP_VERSION = '0.0.1'
+
 /** 项目地址：GitHub 仓库链接 */
 const APP_PROJECT_URL = 'https://github.com/Garfield-2718/C_Struct_Gplot'
 
@@ -302,7 +305,7 @@ export function registerIpcHandlers(): void {
     ipcMain.handle('get-app-info', async (): Promise<AppInfo> => {
         return {
             name: app.getName(),
-            version: app.getVersion(),
+            version: APP_VERSION,
             author: APP_AUTHOR,
             projectUrl: APP_PROJECT_URL
         }
