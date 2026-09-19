@@ -1,6 +1,9 @@
-import { ref, nextTick } from 'vue'
-import type { Ref } from 'vue'
+import { ref, computed, nextTick } from 'vue'
+import type { Ref, ComputedRef } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { StructNodeRecord } from '@/views/canvas_view/useCanvasView'
+import { errorMessageKey } from '../../../../shared/errors'
+import type { AppError } from '../../../../shared/errors'
 
 /** add-node 通道返回结构，与主进程 ipc-handlers.ts 的 AddNodeResult 对齐 */
 interface AddNodeResult {
@@ -22,6 +25,16 @@ interface BottombarViewApi {
     handleAddNodeConfirm: () => Promise<void>
     /** 取消新增：关闭对话框并清空输入 */
     handleAddNodeCancel: () => void
+    /** 错误提示弹窗是否可见：手动导入结构体失败时展示 */
+    errorVisible: Ref<boolean>
+    /** 错误弹窗标题 */
+    errorTitle: ComputedRef<string>
+    /** 错误弹窗正文（由错误码翻译而来） */
+    errorMessage: ComputedRef<string>
+    /** 错误弹窗的原始诊断详情（不翻译，可空） */
+    errorDetail: ComputedRef<string>
+    /** 关闭错误提示弹窗 */
+    handleDismissError: () => void
 }
 
 /**
@@ -43,6 +56,32 @@ export function useBottombarView(
 
     /** 对话框中输入的节点内容：底层以字符串保存，确认后发送给主进程 */
     const newNodeName = ref('')
+
+    const { t } = useI18n({ useScope: 'global' })
+
+    /**
+     * 错误提示弹窗状态：手动导入结构体失败时展示具体原因。
+     * 与 useImportProject 的错误处理模式保持一致：error 保存结构化错误，
+     * title/message/detail 由 computed 派生，message 经 errorMessageKey 映射翻译。
+     */
+    const errorVisible = ref(false)
+    const error = ref<AppError | null>(null)
+    const errorTitle = computed(() => t('bottombar.addNodeFailed'))
+    const errorMessage = computed(() =>
+        error.value ? t(errorMessageKey(error.value.code), error.value.params ?? {}) : ''
+    )
+    const errorDetail = computed(() => error.value?.detail ?? '')
+
+    /** 弹出错误提示：记录错误并显示弹窗 */
+    function showError(failure: AppError): void {
+        error.value = failure
+        errorVisible.value = true
+    }
+
+    /** 关闭错误提示弹窗 */
+    function handleDismissError(): void {
+        errorVisible.value = false
+    }
 
     /** 点击顶部三角手柄切换收起/展开 */
     function handleToggleCollapse(): void {
@@ -73,7 +112,10 @@ export function useBottombarView(
 
     /**
      * 确认新增：把输入字符串发给主进程存入红黑树；若返回 success=true，
-     * 立即用返回的节点 hash 调用 query-node 拉取节点信息，并交由 onNodeAdded 回调渲染到画布。
+     * 逐条用返回的节点 hash 调用 query-node 拉取信息，并交由 onNodeAdded 回调渲染到画布。
+     * 同名结构体在库中可能对应多条定义（含 0 字段的前向声明），此处全部渲染，
+     * 各卡片由 addStructNode 按 30px 递增偏移错开，避免完全重叠。
+     * 失败时弹出错误提示：未命中任何记录 → NODE_NOT_FOUND；IPC 异常或全部 query-node 落空 → NODE_LOAD_FAILED。
      */
     async function handleAddNodeConfirm(): Promise<void> {
         const nodeName = newNodeName.value.trim()
@@ -82,28 +124,51 @@ export function useBottombarView(
             return
         }
         // 沿用 electron-toolkit 暴露的 ipcRenderer，与导入页调用方式保持一致
-        const result = (await window.electron.ipcRenderer.invoke('add-node', nodeName)) as
-            AddNodeResult | undefined
+        let result: AddNodeResult | undefined
+        try {
+            result = (await window.electron.ipcRenderer.invoke('add-node', nodeName)) as
+                AddNodeResult | undefined
+        } catch (cause) {
+            // IPC 调用本身抛错（如主进程异常）：关闭对话框并提示加载失败
+            isAddNodeDialogVisible.value = false
+            newNodeName.value = ''
+            console.error('[bottombar] add-node 调用异常:', cause)
+            showError({
+                code: 'NODE_LOAD_FAILED',
+                detail: cause instanceof Error ? cause.message : String(cause)
+            })
+            return
+        }
         isAddNodeDialogVisible.value = false
         newNodeName.value = ''
         console.log('[bottombar] 新增节点结果:', result)
-        // success 为 true 时取回新增节点的 hash，否则跳过后续查询与渲染
-        const hash = result?.success ? result.hashes[0] : undefined
-        if (!hash) {
+        // success 为 true 时取回全部命中记录的 hash（同名可能有多条定义），否则跳过后续查询与渲染
+        const hashes = result?.success ? result.hashes : []
+        if (hashes.length === 0) {
+            // 数据库中未找到该结构体（或无活动库）：提示未找到节点
             console.warn('[bottombar] 新增失败或未返回 hash，跳过查询渲染:', nodeName)
+            showError({ code: 'NODE_NOT_FOUND' })
             return
         }
-        // 立即用节点 hash 到红黑树查询该节点的完整信息
-        const record = (await window.electron.ipcRenderer.invoke(
-            'query-node',
-            hash
-        )) as StructNodeRecord | null
-        if (!record) {
-            console.warn('[bottombar] query-node 未返回节点信息:', hash)
-            return
+        // 逐条查询并渲染：同名多定义（含前向声明）全部呈现，单条查询失败不影响其余
+        let renderedCount = 0
+        for (const hash of hashes) {
+            const record = (await window.electron.ipcRenderer.invoke(
+                'query-node',
+                hash
+            )) as StructNodeRecord | null
+            if (!record) {
+                console.warn('[bottombar] query-node 未返回节点信息:', hash)
+                continue
+            }
+            onNodeAdded?.(record)
+            renderedCount++
         }
-        // 交给画布渲染该节点
-        onNodeAdded?.(record)
+        // 命中 hash 但均无法查询到节点信息：视为加载失败并提示
+        if (renderedCount === 0) {
+            console.warn('[bottombar] 全部 hash 均未查到节点信息:', nodeName)
+            showError({ code: 'NODE_LOAD_FAILED' })
+        }
     }
 
     return {
@@ -114,6 +179,11 @@ export function useBottombarView(
         isAddNodeDialogVisible,
         newNodeName,
         handleAddNodeConfirm,
-        handleAddNodeCancel
+        handleAddNodeCancel,
+        errorVisible,
+        errorTitle,
+        errorMessage,
+        errorDetail,
+        handleDismissError
     }
 }

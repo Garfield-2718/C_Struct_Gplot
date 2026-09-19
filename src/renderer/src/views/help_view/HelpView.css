@@ -1,0 +1,166 @@
+/* ========== 帮助页：结构对齐 SettingsView，突出应用信息卡片 ========== */
+.hlp-page {
+    display: grid;
+    grid-template-rows: 44px minmax(0, 1fr);
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    background-color: var(--vs-editor-bg);
+    color: var(--vs-foreground);
+    font-size: 14px;
+    line-height: 22px;
+}
+
+/* ========== 标题栏：左侧返回按键 + 居中页面名，与设置页视觉一致 ========== */
+.hlp-titlebar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    padding: 0 12px 0 8px;
+    background-color: var(--vs-titlebar-bg);
+    border-bottom: 1px solid var(--vs-widget-border);
+    color: var(--vs-title-foreground);
+    user-select: none;
+}
+
+.hlp-titlebar-text {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* 返回按键：无边框文本按键，配色与顶边栏工具按键一致 */
+.hlp-back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border: none;
+    border-radius: 2px;
+    background: transparent;
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 20px;
+    color: var(--vs-foreground);
+    cursor: pointer;
+}
+
+.hlp-back-button:hover {
+    background-color: var(--vs-list-hover-bg);
+}
+
+.hlp-back-button:active {
+    background-color: var(--vs-list-inactive-selection-bg);
+}
+
+.hlp-back-button:focus-visible {
+    outline: 1px solid var(--vs-focus-border);
+    outline-offset: -2px;
+}
+
+/* 返回箭头：用 border 拼出向左的箭头，与设置页做法一致 */
+.hlp-back-arrow {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-left: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg);
+}
+
+/* ========== 工作区：内容居中，超出滚动 ========== */
+.hlp-workspace {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    padding: 24px;
+    overflow: auto;
+}
+
+.hlp-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex-shrink: 0;
+    width: 100%;
+    max-width: 480px;
+    min-width: 0;
+    margin: auto;
+}
+
+.hlp-title {
+    margin: 0;
+    color: var(--vs-title-foreground);
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 32px;
+    text-align: center;
+}
+
+/* ========== 应用信息卡片：居中展示版本/作者/项目地址 ========== */
+.hlp-info-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 8px;
+    padding: 24px;
+    background-color: var(--vs-editor-bg);
+    border: 1px solid var(--vs-widget-border);
+    border-radius: 2px;
+    box-shadow: var(--vs-shadow-heavy, 0 2px 8px rgba(0, 0, 0, 0.08));
+}
+
+/* 信息行：标签 + 值，水平排列 */
+.hlp-info-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.hlp-info-label {
+    color: var(--vs-description-foreground);
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.hlp-info-value {
+    color: var(--vs-foreground);
+    font-size: 14px;
+    font-weight: 500;
+    text-align: right;
+    word-break: break-all;
+}
+
+/* 项目地址链接：使用主题蓝色，悬停下划线 */
+.hlp-info-link {
+    color: var(--vs-text-link-foreground, #006ab1);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.hlp-info-link:hover {
+    text-decoration: underline;
+    color: var(--vs-text-link-active-foreground, #007acc);
+}
+
+.hlp-info-link:focus-visible {
+    outline: 1px solid var(--vs-focus-border);
+    outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+    .hlp-titlebar {
+        padding: 0 16px;
+    }
+
+    .hlp-workspace {
+        padding: 16px;
+    }
+
+    .hlp-info-card {
+        padding: 16px;
+    }
+}

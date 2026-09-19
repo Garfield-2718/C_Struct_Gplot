@@ -20,9 +20,11 @@ const messages = {
     import: {
         pageTitle: 'Project import',
         title: 'Import project',
-        description: 'Select a local project file to get started.',
-        selectFile: 'Select project file',
-        selectFileHint: 'Open the file picker',
+        description: 'Select a local project file or folder to get started.',
+        selectFileOrFolder: 'Select project file or folder',
+        selectFile: 'Select a single file or archive',
+        selectFileHint: 'Click to choose a file or folder, or drag a file in',
+        selectFolder: 'Select project folder',
         selectDatabase: 'Import existing database (.db)',
         selectDatabaseHint: 'Select a local .db database file to load directly',
         databaseFailed: 'Database import failed',
@@ -32,6 +34,17 @@ const messages = {
         pageTitle: 'Project loading',
         title: 'Loading',
         description: 'Processing the project. Please wait.'
+    },
+    timeout: {
+        pageTitle: 'Parser timeout',
+        title: 'The parser timed out',
+        description: 'The CLI parser did not finish within the allowed time and was terminated.',
+        timeoutInfo: 'Timeout: {ms} ms (about {minutes} min)',
+        suggestion:
+            'Check the project size and try again. If it persists, expand the technical details below to help diagnose.',
+        retry: 'Retry',
+        backToImport: 'Back to import',
+        technicalDetails: 'Technical details'
     },
     canvas: {
         emptyHint: 'Click “Add node” below to get started',
@@ -52,6 +65,7 @@ const messages = {
         filePath: 'File path',
         sourceFile: 'Source file',
         fieldCount: 'Field count',
+        hash: 'Hash',
         toggleSection: 'Click to collapse or expand',
         resizeSection: 'Drag to resize height',
         hideElement: 'Hide this element',
@@ -67,12 +81,20 @@ const messages = {
         editModeHint: 'Current: Edit mode (click to switch to Select mode)',
         selectModeHint: 'Current: Select mode (click to switch to Edit mode)',
         addNode: 'Add node',
-        nodePlaceholder: 'Enter a node to add'
+        nodePlaceholder: 'Enter a node to add',
+        addNodeFailed: 'Could not add node'
     },
     topbar: {
         settings: 'Settings',
         export: 'Export',
-        import: 'Import'
+        help: 'Help'
+    },
+    help: {
+        pageTitle: 'Help',
+        title: 'c-struct-gplot',
+        author: 'Author',
+        version: 'Version',
+        projectUrl: 'Project URL'
     },
     settings: {
         title: 'Settings',
@@ -127,7 +149,7 @@ const messages = {
     native: {
         allFiles: 'All files',
         sqliteDatabase: 'SQLite database',
-        selectProjectFile: 'Select project file',
+        selectProjectFile: 'Select a single file or archive',
         selectProjectDirectory: 'Select project directory',
         selectDatabase: 'Select existing database',
         open: 'Open',

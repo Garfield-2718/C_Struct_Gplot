@@ -24,6 +24,18 @@ const routes: RouteRecordRaw[] = [
         name: 'Settings',
         component: () => import('@/views/settings_view/SettingsView.vue'),
         meta: { guid: '13:01' }
+    },
+    {
+        path: '/timeout',
+        name: 'TimeoutError',
+        component: () => import('@/views/timeout_error_view/TimeoutErrorView.vue'),
+        meta: { guid: '14:01' }
+    },
+    {
+        path: '/help',
+        name: 'Help',
+        component: () => import('@/views/help_view/HelpView.vue'),
+        meta: { guid: '15:01' }
     }
 ]
 

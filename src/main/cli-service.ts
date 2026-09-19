@@ -26,7 +26,7 @@ export interface CliResult {
 }
 
 /** CLI 子进程超时（毫秒），防止挂起拖垮主进程 */
-const CLI_TIMEOUT_MS = 60_000
+const CLI_TIMEOUT_MS = 3_600_000
 
 /**
  * 通用 CLI 调用助手（真实实现）

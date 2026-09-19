@@ -242,6 +242,8 @@ export function useSidebarView(
             elementInfoRows.value = [
                 // 名称行带小眼睛：控制当前选中元素在画布上的显隐（与父/子节点行眼睛一致）
                 { key: 'sidebar.name', value: displayName, visibilityToggle: true },
+                // hash 行：选中元素的完整 hash（= 红黑树键，与 DB structures.hash 一致），过长时自动换行
+                { key: 'sidebar.hash', value: node.hash },
                 { key: 'sidebar.type', value: node.kind },
                 { key: 'sidebar.sourceFile', value: node.sourceFile ?? '' },
                 { key: 'sidebar.fieldCount', value: String(node.fields?.length ?? 0) }
@@ -265,10 +267,13 @@ export function useSidebarView(
             // 无父节点则该段默认折叠
             applySectionCollapse(sectionStates.parentNodes, parentNodes.value.length > 0)
 
-            // 子节点列表：去重并过滤空值后解析为可读标题
+            // 子节点列表：展平各字段的 hash 数组，去重并过滤空值后解析为可读标题
             const childHashes = [
                 ...new Set(
-                    (node.childHashes ?? []).filter((h): h is string => h !== null && h !== '')
+                    (node.childHashes ?? [])
+                        .filter((arr): arr is string[] => arr !== null)
+                        .flat()
+                        .filter((h): h is string => h !== null && h !== '')
                 )
             ]
             const childLabels = await queryNodeLabels(childHashes)

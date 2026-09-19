@@ -1,0 +1,183 @@
+/* ========== 超时错误页：结构对齐 LoadingView，突出告警图标 + 恢复动作 ========== */
+.tev-page {
+    display: grid;
+    grid-template-rows: 44px minmax(0, 1fr);
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    background-color: var(--vs-editor-bg);
+    color: var(--vs-foreground);
+    font-size: 14px;
+    line-height: 22px;
+}
+
+.tev-titlebar {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    padding: 0 24px;
+    background-color: var(--vs-titlebar-bg);
+    border-bottom: 1px solid var(--vs-widget-border);
+    color: var(--vs-title-foreground);
+}
+
+.tev-workspace {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    padding: 24px;
+    overflow: auto;
+}
+
+/* 面板：居中纵向排布图标 / 标题 / 描述 / 超时信息 / 建议 / 详情 / 操作区 */
+.tev-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex-shrink: 0;
+    width: 100%;
+    max-width: 560px;
+    min-width: 0;
+    margin: auto;
+    padding: 24px;
+    box-sizing: border-box;
+    background-color: var(--vs-editor-bg);
+    border: 1px solid var(--vs-widget-border);
+    border-radius: 2px;
+    box-shadow: var(--vs-shadow-heavy, 0 2px 8px rgba(0, 0, 0, 0.08));
+}
+
+/* 告警图标：使用错误色强调，居中放置 */
+.tev-icon-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 4px;
+}
+
+.tev-icon {
+    color: var(--vs-error-foreground);
+}
+
+.tev-title {
+    margin: 0;
+    color: var(--vs-title-foreground);
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 32px;
+    text-align: center;
+}
+
+.tev-description {
+    margin: 0;
+    text-align: center;
+}
+
+/* 超时时长摘要：稍小字号 + 描述色，避免抢主标题视觉焦点 */
+.tev-info {
+    margin: 0;
+    color: var(--vs-description-foreground);
+    font-size: 13px;
+    text-align: center;
+}
+
+.tev-suggestion {
+    margin: 0;
+    color: var(--vs-description-foreground);
+    font-size: 13px;
+    text-align: center;
+}
+
+/* 技术详情：默认折叠，展开后保留原始 stderr/异常文本，允许滚动 */
+.tev-details {
+    margin-top: 4px;
+    font-size: 12px;
+    user-select: text;
+}
+
+.tev-details summary {
+    margin-bottom: 8px;
+    cursor: pointer;
+    color: var(--vs-description-foreground);
+}
+
+.tev-details-pre {
+    margin: 0;
+    padding: 8px 12px;
+    max-height: 200px;
+    overflow-y: auto;
+    background-color: var(--vs-sidebar-bg);
+    border: 1px solid var(--vs-widget-border);
+    border-radius: 2px;
+    font-family: var(--vs-editor-font-family, monospace);
+    font-size: 12px;
+    line-height: 18px;
+    color: var(--vs-foreground);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* 操作区：主按键（重试）+ 次按键（返回导入页），整体居中 */
+.tev-actions {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.tev-button {
+    padding: 6px 16px;
+    background-color: var(--vs-widget-bg);
+    border: 1px solid var(--vs-widget-border);
+    border-radius: 2px;
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 20px;
+    color: var(--vs-foreground);
+    cursor: pointer;
+}
+
+.tev-button:hover {
+    background-color: var(--vs-list-hover-bg);
+}
+
+.tev-button:active {
+    background-color: var(--vs-list-inactive-selection-bg);
+}
+
+.tev-button:focus-visible {
+    outline: 1px solid var(--vs-focus-border);
+    outline-offset: -2px;
+}
+
+/* 主操作按键（重试）：柔和蓝强调，与 ErrorPrompt 主按键一致 */
+.tev-button-primary {
+    background-color: var(--vs-button-bg);
+    border-color: var(--vs-button-bg);
+    color: var(--vs-button-fg);
+}
+
+.tev-button-primary:hover {
+    background-color: var(--vs-button-hover-bg);
+    border-color: var(--vs-button-hover-bg);
+}
+
+.tev-button-primary:active {
+    background-color: var(--vs-button-hover-bg);
+    border-color: var(--vs-button-hover-bg);
+}
+
+@media (max-width: 640px) {
+    .tev-titlebar {
+        padding: 0 16px;
+    }
+
+    .tev-workspace {
+        padding: 16px;
+    }
+
+    .tev-content {
+        padding: 16px;
+    }
+}

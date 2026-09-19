@@ -50,6 +50,11 @@
     margin: 8px 0 24px;
 }
 
+.imv-picker-wrap {
+    position: relative;
+    width: 100%;
+}
+
 .imv-file-picker {
     display: flex;
     flex-direction: column;
@@ -73,7 +78,8 @@
 }
 
 .imv-file-picker:focus-visible,
-.imv-file-picker-drag-over {
+.imv-file-picker-drag-over,
+.imv-file-picker-open {
     border-color: var(--vs-focus-border);
     outline: 2px solid var(--vs-focus-border);
     outline-offset: -3px;
@@ -99,6 +105,52 @@
 
 .imv-file-hint {
     color: var(--vs-description-foreground);
+    pointer-events: none;
+}
+
+.imv-picker-menu {
+    position: absolute;
+    z-index: 10;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    margin: 0;
+    padding: 4px;
+    list-style: none;
+    border: 1px solid var(--vs-widget-border);
+    border-radius: 2px;
+    background-color: var(--vs-menu-bg, var(--vs-sidebar-bg));
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.24);
+}
+
+.imv-picker-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 2px;
+    background-color: transparent;
+    color: var(--vs-foreground);
+    font: inherit;
+    line-height: 22px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.imv-picker-menu-item:hover {
+    background-color: var(--vs-list-hover-bg);
+}
+
+.imv-picker-menu-item:focus-visible {
+    outline: 2px solid var(--vs-focus-border);
+    outline-offset: -2px;
+}
+
+.imv-picker-menu-icon {
+    flex-shrink: 0;
     pointer-events: none;
 }
 

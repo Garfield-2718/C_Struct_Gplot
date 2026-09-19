@@ -71,8 +71,8 @@ interface CanvasStructNodeData {
     width: number
     collapsed: boolean
     fields: string[]
-    /** 与 fields 同序：每个字段指向的子结构体 hash（无则为 null），用于自动连线 */
-    childHashes: (string | null)[]
+    /** 与 fields 同序：每个字段指向的子结构体 hash 数组（无子节点则为 null），用于自动连线与侧边栏展示 */
+    childHashes: (string[] | null)[]
     /** 引用当前结构体的父结构体 hash 列表（来自 relations 表），用于侧边栏展示 */
     parentHashes: string[]
     /** 源文件路径（来自 structures 表 source_file 列），用于侧边栏「源文件」展示 */
@@ -107,8 +107,8 @@ const NODE_MAX_WIDTH = 260
 /**
  * 将 CLI 的 ui_json（table_head/table_body 格式）转化为画布渲染所需的节点数据。
  * title 形如 'struct config (d03e8b)'；fields 取各 members_N 的 member_context（去首尾空白）；
- * childHashes 与 fields 同序记录各字段子结构 hash（用于自动连线）；width 按最长文本估算并封顶
- * NODE_MAX_WIDTH；匿名 union（name 为空）标题省略名称。解析失败返回 null。
+ * childHashes 与 fields 同序，每项为该字段全部子结构 hash 数组（无子节点则 null），用于自动连线与侧边栏展示；
+ * width 按最长文本估算并封顶 NODE_MAX_WIDTH；匿名 union（name 为空）标题省略名称。解析失败返回 null。
  */
 function transformUiJsonToCanvasNode(
     uiJson: string,
@@ -129,15 +129,18 @@ function transformUiJsonToCanvasNode(
     const hash = typeof head.hash === 'string' && head.hash !== '' ? head.hash : fallbackHash
     const hashShort = hash.slice(0, 6)
     const title = name ? `${kind} ${name} (${hashShort})` : `${kind} (${hashShort})`
-    // fields 与 childHashes 同序构建：跳过空 member_context，child_hash 取首个非空 hash
+    // fields 与 childHashes 同序构建：跳过空 member_context，child_hash 保留全部有效 hash
     const fields: string[] = []
-    const childHashes: (string | null)[] = []
+    const childHashes: (string[] | null)[] = []
     for (const member of Object.values(body)) {
         const text = (member?.member_context ?? '').trim()
         if (text === '') continue
         fields.push(text)
-        const child = member?.child_hash?.[0]
-        childHashes.push(typeof child === 'string' && child !== '' ? child : null)
+        // 过滤 null 与空字符串，保留该字段的全部有效子结构 hash
+        const validHashes = (member?.child_hash ?? []).filter(
+            (h): h is string => typeof h === 'string' && h !== ''
+        )
+        childHashes.push(validHashes.length > 0 ? validHashes : null)
     }
     const maxLen = Math.max(title.length, ...fields.map((field) => field.length), 0)
     const width = Math.min(NODE_H_PADDING + maxLen * NODE_CHAR_WIDTH, NODE_MAX_WIDTH)
@@ -185,8 +188,8 @@ function transformAndInsert(
         node.sourceFile = record.source_file ?? null
         // 收集父/子 hash 以便批量查询名称
         for (const h of node.parentHashes) relatedHashes.add(h)
-        for (const h of node.childHashes) {
-            if (h) relatedHashes.add(h)
+        for (const hArr of node.childHashes) {
+            if (hArr) for (const h of hArr) relatedHashes.add(h)
         }
         transformed.push({ ...record, ui_json: JSON.stringify(node) })
     }
@@ -259,10 +262,39 @@ function loadStructIntoTreeByHash(hash: string, dbPath: string, tag: string): st
  * CLI 相关通道（cli:*）仍由 cli-service.ts 的 registerCliIpc() 负责，
  * 数据库读取能力由 db-service.ts 提供。
  */
+/** get-app-info 通道返回结构：渲染端「帮助」页展示所需的应用元信息 */
+export interface AppInfo {
+    /** 应用名称（取自 package.json name，由 Electron app.getName() 读取） */
+    name: string
+    /** 应用版本号（取自 package.json version，由 Electron app.getVersion() 读取） */
+    version: string
+    /** 应用作者 */
+    author: string
+    /** 项目地址（GitHub 仓库链接） */
+    projectUrl: string
+}
+
+/** 应用作者 */
+const APP_AUTHOR = 'Garfield-2718'
+
+/** 项目地址：GitHub 仓库链接 */
+const APP_PROJECT_URL = 'https://github.com/Garfield-2718/C_Struct_Gplot'
+
 export function registerIpcHandlers(): void {
     // IPC: 加载持久化设置（userData/settings.json）
     ipcMain.handle('load-settings', async () => {
         return loadSettings()
+    })
+
+    // IPC: 返回应用元信息（名称/版本/作者/项目地址），供渲染端「帮助」页展示
+    // name/version 由 Electron 从 package.json 读取；author/projectUrl 为常量。
+    ipcMain.handle('get-app-info', async (): Promise<AppInfo> => {
+        return {
+            name: app.getName(),
+            version: app.getVersion(),
+            author: APP_AUTHOR,
+            projectUrl: APP_PROJECT_URL
+        }
     })
 
     // IPC: 保存设置到配置文件

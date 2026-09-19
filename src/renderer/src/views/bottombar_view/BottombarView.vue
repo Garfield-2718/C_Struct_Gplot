@@ -76,12 +76,22 @@
             </div>
         </div>
     </Teleport>
+
+    <!-- 错误提示弹窗：手动导入结构体失败时展示（组件内部已 Teleport 到 body） -->
+    <ErrorPrompt
+        :visible="errorVisible"
+        :title="errorTitle"
+        :message="errorMessage"
+        :detail="errorDetail"
+        @close="handleDismissError"
+    />
 </template>
 
 <script lang="ts" setup>
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useBottombarView } from './useBottombarView'
+import ErrorPrompt from '@/views/error_prompt/ErrorPrompt.vue'
 import type { StructNodeRecord, CanvasMode } from '@/views/canvas_view/useCanvasView'
 import './BottombarView.css'
 
@@ -106,7 +116,12 @@ const {
     isAddNodeDialogVisible,
     newNodeName,
     handleAddNodeConfirm,
-    handleAddNodeCancel
+    handleAddNodeCancel,
+    errorVisible,
+    errorTitle,
+    errorMessage,
+    errorDetail,
+    handleDismissError
 } = useBottombarView(
     addNodeInputRef,
     (record) => emit('node-added', record),

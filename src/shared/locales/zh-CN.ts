@@ -18,9 +18,11 @@ export const zhCN = {
     import: {
         pageTitle: '项目导入',
         title: '导入项目',
-        description: '从本地选择项目文件以开始处理。',
-        selectFile: '选择项目文件',
-        selectFileHint: '打开文件选择窗口',
+        description: '从本地选择项目文件或文件夹以开始处理。',
+        selectFileOrFolder: '选择项目文件或文件夹',
+        selectFile: '选择单个文件或压缩包',
+        selectFileHint: '点击选择文件或文件夹，或直接拖入文件',
+        selectFolder: '选择项目文件夹',
         selectDatabase: '导入已有数据库 (.db)',
         selectDatabaseHint: '选择本地已有的 .db 数据库文件直接载入',
         databaseFailed: '导入数据库失败',
@@ -30,6 +32,16 @@ export const zhCN = {
         pageTitle: '项目加载',
         title: '加载中',
         description: '正在处理项目，请稍候。'
+    },
+    timeout: {
+        pageTitle: '解析超时',
+        title: '解析进程超时',
+        description: 'CLI 解析进程在规定时间内未完成，已被终止。',
+        timeoutInfo: '超时时长：{ms} 毫秒（约 {minutes} 分钟）',
+        suggestion: '请检查项目规模后重试；若问题持续，可展开下方技术详情辅助排查。',
+        retry: '重试',
+        backToImport: '返回导入页',
+        technicalDetails: '技术详情'
     },
     canvas: {
         emptyHint: '点击底部「添加节点」开始',
@@ -50,6 +62,7 @@ export const zhCN = {
         filePath: '文件路径',
         sourceFile: '源文件',
         fieldCount: '字段数',
+        hash: '哈希值',
         toggleSection: '点击折叠/展开',
         resizeSection: '拖动调节高度',
         hideElement: '隐藏该元素',
@@ -65,12 +78,20 @@ export const zhCN = {
         editModeHint: '当前：编辑模式（点击切回选择模式）',
         selectModeHint: '当前：选择模式（点击进入编辑模式）',
         addNode: '添加节点',
-        nodePlaceholder: '请输入要新增的节点'
+        nodePlaceholder: '请输入要新增的节点',
+        addNodeFailed: '添加节点失败'
     },
     topbar: {
         settings: '设置',
         export: '导出',
-        import: '导入'
+        help: '帮助'
+    },
+    help: {
+        pageTitle: '帮助',
+        title: 'c-struct-gplot',
+        author: '作者',
+        version: '版本号',
+        projectUrl: '项目地址'
     },
     settings: {
         title: '设置',
@@ -123,7 +144,7 @@ export const zhCN = {
     native: {
         allFiles: '所有文件',
         sqliteDatabase: 'SQLite 数据库',
-        selectProjectFile: '选择项目文件',
+        selectProjectFile: '选择单个文件或压缩包',
         selectProjectDirectory: '选择项目目录',
         selectDatabase: '选择已有数据库',
         open: '打开',

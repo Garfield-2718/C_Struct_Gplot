@@ -60,8 +60,8 @@ export interface StructNodeData {
     collapsed?: boolean
     /** 字段行文本列表 */
     fields?: string[]
-    /** 与 fields 同序：各字段指向的子结构体 hash（无则 null），用于自动连线 */
-    childHashes?: (string | null)[]
+    /** 与 fields 同序：各字段指向的子结构体 hash 数组（无子节点则 null），用于自动连线与侧边栏展示 */
+    childHashes?: (string[] | null)[]
     /** 引用当前结构体的父结构体 hash 列表（来自 relations 表），用于侧边栏展示 */
     parentHashes?: string[]
     /** 源文件路径（来自 DB structures 表 source_file 列），用于侧边栏「源文件」展示 */
@@ -329,18 +329,21 @@ export function useCanvasView(): CanvasViewApi {
                 result.push(edge)
             }
         }
-        // 正向：新节点字段 → 已存在的子节点
+        // 正向：新节点字段 → 已存在的子节点（每个字段可能对应多个子 hash）
         const children = data.childHashes ?? []
-        children.forEach((childHash, fieldIndex) => {
-            if (childHash && childHash !== hash && existingIds.has(childHash)) {
-                pushEdge(
-                    createStructEdge(
-                        `e-${hash}-f${fieldIndex}-${childHash}`,
-                        hash,
-                        fieldIndex,
-                        childHash
+        children.forEach((childHashArr, fieldIndex) => {
+            if (!childHashArr) return
+            for (const childHash of childHashArr) {
+                if (childHash !== hash && existingIds.has(childHash)) {
+                    pushEdge(
+                        createStructEdge(
+                            `e-${hash}-f${fieldIndex}-${childHash}`,
+                            hash,
+                            fieldIndex,
+                            childHash
+                        )
                     )
-                )
+                }
             }
         })
         // 反向：已存在节点的字段 → 新节点
@@ -348,16 +351,19 @@ export function useCanvasView(): CanvasViewApi {
             if (node.id === hash) continue
             const nodeData = node.data as StructNodeData | undefined
             const nodeChildren = nodeData?.childHashes ?? []
-            nodeChildren.forEach((childHash, fieldIndex) => {
-                if (childHash === hash) {
-                    pushEdge(
-                        createStructEdge(
-                            `e-${node.id}-f${fieldIndex}-${hash}`,
-                            node.id,
-                            fieldIndex,
-                            hash
+            nodeChildren.forEach((childHashArr, fieldIndex) => {
+                if (!childHashArr) return
+                for (const childHash of childHashArr) {
+                    if (childHash === hash) {
+                        pushEdge(
+                            createStructEdge(
+                                `e-${node.id}-f${fieldIndex}-${hash}`,
+                                node.id,
+                                fieldIndex,
+                                hash
+                            )
                         )
-                    )
+                    }
                 }
             })
         }
