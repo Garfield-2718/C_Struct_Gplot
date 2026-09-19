@@ -96,6 +96,29 @@ const messages = {
         version: 'Version',
         projectUrl: 'Project URL'
     },
+    export: {
+        pageTitle: 'Export',
+        title: 'Export canvas',
+        description: 'Choose an export format and save it as a local file.',
+        formatSection: 'Export format',
+        formatPdf: 'PDF document',
+        formatPdfHint: 'Good for printing and archiving; a single page embeds a high-res bitmap',
+        formatPng: 'PNG image',
+        formatPngHint: 'Lossless bitmap with the canvas background color filled in',
+        formatSvg: 'SVG vector',
+        formatSvgHint: 'Infinitely scalable vector graphic, handy for further editing',
+        formatJpeg: 'JPEG image',
+        formatJpegHint: 'Lossy compressed bitmap with a smaller file size',
+        fileName: 'File name',
+        fileNameHint: 'No extension needed; it is appended automatically from the format.',
+        save: 'Export',
+        saving: 'Exporting…',
+        success: 'Exported to: {path}',
+        emptyTitle: 'Nothing to export',
+        emptyDescription:
+            'The canvas is empty or the snapshot failed. Go back, add nodes, and try again.',
+        backToCanvas: 'Back to canvas'
+    },
     settings: {
         title: 'Settings',
         description:
@@ -144,7 +167,8 @@ const messages = {
         cliFailed: 'The parser failed (exit code: {exitCode})',
         cliTimeout: 'The parser timed out after {timeout} ms and was terminated',
         nodeNotFound: 'Node not found',
-        nodeLoadFailed: 'Could not load the node'
+        nodeLoadFailed: 'Could not load the node',
+        exportSaveFailed: 'Could not export the file'
     },
     native: {
         allFiles: 'All files',
@@ -156,6 +180,12 @@ const messages = {
         projectProcessed: 'Processing complete',
         databaseImported: 'Database imported successfully',
         databaseValidated: 'Database schema validated',
+        exportFile: 'Export file',
+        save: 'Save',
+        pdfDocument: 'PDF document',
+        pngImage: 'PNG image',
+        svgImage: 'SVG vector',
+        jpegImage: 'JPEG image',
         fileMenu: 'File',
         editMenu: 'Edit',
         viewMenu: 'View',

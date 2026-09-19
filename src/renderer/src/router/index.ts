@@ -36,6 +36,12 @@ const routes: RouteRecordRaw[] = [
         name: 'Help',
         component: () => import('@/views/help_view/HelpView.vue'),
         meta: { guid: '15:01' }
+    },
+    {
+        path: '/export',
+        name: 'Export',
+        component: () => import('@/views/export_view/ExportView.vue'),
+        meta: { guid: '16:01' }
     }
 ]
 

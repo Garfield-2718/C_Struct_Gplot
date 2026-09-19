@@ -1,4 +1,4 @@
-import { ref, watch, markRaw, computed, onActivated, onDeactivated } from 'vue'
+import { ref, watch, markRaw, computed, nextTick, onActivated, onDeactivated } from 'vue'
 import type { Ref, ComputedRef } from 'vue'
 import {
     useVueFlow,
@@ -14,6 +14,8 @@ import {
 } from '@vue-flow/core'
 import StructNode from './struct_node/StructNode.vue'
 import FlowArrowEdge from './flow_arrow_edge/FlowArrowEdge.vue'
+import { generateExportArtifacts } from './captureCanvas'
+import type { ExportArtifacts } from './captureCanvas'
 import { useSettings } from '@/stores/settings'
 
 /**
@@ -78,8 +80,13 @@ export interface StructNodeRecord {
     ui_json: string
 }
 
-/** 连线样式：与 SVG 一致的灰色曲线，无箭头 */
-const EDGE_STYLE = { stroke: '#999999', strokeWidth: 1.5 }
+/**
+ * 连线样式：与 SVG 一致的灰色曲线，无箭头。
+ * fill:'none' 必须内联：Vue Flow 的 .vue-flow__edge-path 的 fill:none 仅来自其外部样式表，
+ * 导出（html-to-image 序列化 SVG / 光栅化）时外部 CSS 不生效，fill 回落 SVG 默认 black，
+ * 开放贝塞尔曲线会被首尾闭合填充成黑色「阴影」缎带；内联 fill:none 可保证导出不被填充。
+ */
+const EDGE_STYLE = { stroke: '#999999', strokeWidth: 1.5, fill: 'none' }
 
 /** 高亮连线的统一线宽（px）：选中时父/子节点连线均加粗到 3px */
 const SELECTED_EDGE_WIDTH = 3
@@ -131,11 +138,22 @@ interface CanvasViewApi {
     toggleCanvasMode: () => void
     /** 是否处于编辑模式：门控「连线吸附点左右调整」等编辑能力 */
     isEditMode: ComputedRef<boolean>
+    /** 生成当前画布的全格式导出产物（供顶栏「导出」按键在画布存活时捕获），无节点时返回 null */
+    captureExport: () => Promise<ExportArtifacts | null>
 }
 
 /** Canvas 页面的组合式函数：基于 Vue Flow 的节点编辑器 */
 export function useCanvasView(): CanvasViewApi {
-    const { viewport, dimensions } = useVueFlow()
+    const {
+        viewport,
+        dimensions,
+        getNodes,
+        removeSelectedElements,
+        addSelectedNodes,
+        addSelectedEdges,
+        findNode,
+        findEdge
+    } = useVueFlow()
     const globalSettings = useSettings()
 
     const nodes = ref([]) as Ref<Node[]>
@@ -151,6 +169,55 @@ export function useCanvasView(): CanvasViewApi {
 
     /** 是否处于编辑模式：后续用于门控「连线吸附点左右调整」等编辑能力 */
     const isEditMode = computed(() => canvasMode.value === 'edit')
+
+    /**
+     * 生成当前画布的全格式导出产物：
+     * 1) 先清除所有选中状态（节点高亮边框、连线高亮色与流动箭头），得到干净的导出图；
+     * 2) 用 Vue Flow store 的 getNodes（含 computedPosition/dimensions）求包围盒并捕获，
+     *    而非 v-model 绑定的 nodes（可能未回填这些字段导致包围盒 NaN）；
+     * 3) 捕获完成后恢复用户原有选中，避免导出对画布造成副作用。无节点时返回 null。
+     * 由 CanvasView provide 给顶栏，在导出按键点击（画布 DOM 仍存活）时调用。
+     */
+    async function captureExport(): Promise<ExportArtifacts | null> {
+        // 快照当前选中的节点/连线 id，导出后据此恢复
+        const selectedNodeIds = nodes.value
+            .filter((node) => (node as GraphNode).selected)
+            .map((node) => node.id)
+        const selectedEdgeIds = edges.value
+            .filter((edge) => (edge as GraphEdge).selected)
+            .map((edge) => edge.id)
+        const hadSelection = selectedNodeIds.length > 0 || selectedEdgeIds.length > 0
+
+        if (hadSelection) {
+            // 清除节点 .selected 类（边框高亮）与连线选中态
+            removeSelectedElements()
+        }
+        // 无条件重置连线内联样式：handleSelectionChange([]) 把所有连线重写为默认灰 + 内联 fill:none，
+        // 既去掉高亮色/流动箭头，也保证历史会话创建的旧连线对象在导出时不被黑色填充（不依赖 watch 时序）
+        handleSelectionChange([])
+        // 等样式在 DOM 生效：两次 nextTick 覆盖 store→model 同步与组件重渲染，再用一帧 rAF 兜底
+        await nextTick()
+        await nextTick()
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+
+        try {
+            return await generateExportArtifacts(getNodes.value)
+        } finally {
+            if (hadSelection) restoreSelection(selectedNodeIds, selectedEdgeIds)
+        }
+    }
+
+    /** 恢复导出前的选中状态：按 id 从 store 取回节点/连线并重新选中（会触发 watch 重新高亮连线与侧边栏） */
+    function restoreSelection(nodeIds: string[], edgeIds: string[]): void {
+        const nodesToSelect = nodeIds
+            .map((id) => findNode(id))
+            .filter((node): node is GraphNode => !!node)
+        const edgesToSelect = edgeIds
+            .map((id) => findEdge(id))
+            .filter((edge): edge is GraphEdge => !!edge)
+        if (nodesToSelect.length > 0) addSelectedNodes(nodesToSelect)
+        if (edgesToSelect.length > 0) addSelectedEdges(edgesToSelect)
+    }
 
     /** 已动态新增的节点数：用于在视口中心施加递增偏移，避免多节点完全重叠 */
     let addedNodeCount = 0
@@ -497,6 +564,7 @@ export function useCanvasView(): CanvasViewApi {
         canvasNodeIds,
         canvasMode,
         toggleCanvasMode,
-        isEditMode
+        isEditMode,
+        captureExport
     }
 }

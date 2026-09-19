@@ -19,7 +19,8 @@ export const ERROR_MESSAGE_KEYS = {
     CLI_FAILED: 'errors.cliFailed',
     CLI_TIMEOUT: 'errors.cliTimeout',
     NODE_NOT_FOUND: 'errors.nodeNotFound',
-    NODE_LOAD_FAILED: 'errors.nodeLoadFailed'
+    NODE_LOAD_FAILED: 'errors.nodeLoadFailed',
+    EXPORT_SAVE_FAILED: 'errors.exportSaveFailed'
 } as const satisfies Record<string, MessageKey>
 
 export type AppErrorCode = keyof typeof ERROR_MESSAGE_KEYS

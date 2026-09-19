@@ -122,13 +122,14 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { ref, provide } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { VueFlow } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { ControlButton, Controls } from '@vue-flow/controls'
 import { useCanvasView } from './useCanvasView'
 import { useCanvasI18n } from './useCanvasI18n'
+import { CANVAS_EXPORT_KEY } from './captureCanvas'
 import SidebarView from '@/views/sidebar_view/SidebarView.vue'
 import BottombarView from '@/views/bottombar_view/BottombarView.vue'
 import TopbarView from '@/views/topbar_view/TopbarView.vue'
@@ -156,8 +157,12 @@ const {
     canvasNodeIds,
     canvasMode,
     toggleCanvasMode,
-    isEditMode
+    isEditMode,
+    captureExport
 } = useCanvasView()
+
+// 向子组件（顶栏）提供画布导出能力：顶栏「导出」按键点击时画布 DOM 仍存活，可捕获完整快照
+provide(CANVAS_EXPORT_KEY, captureExport)
 
 const canvasRoot = ref<HTMLElement | null>(null)
 const { t } = useI18n({ useScope: 'global' })

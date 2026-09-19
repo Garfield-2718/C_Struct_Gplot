@@ -1,6 +1,6 @@
 import { app, ipcMain, dialog } from 'electron'
 import { join, basename, extname, dirname } from 'path'
-import { mkdirSync, copyFileSync, existsSync } from 'fs'
+import { mkdirSync, copyFileSync, existsSync, writeFileSync } from 'fs'
 import { spawnCli } from './cli-service'
 import {
     findStructRecords,
@@ -25,7 +25,10 @@ import { getSettingsLocale, loadSettings, saveSettings } from './settings-servic
 import type { SettingsData } from './settings-service'
 import { createIpcFailure, errorMessageKey } from '../shared/errors'
 import type { AppError, IpcFailure, IpcResultContext } from '../shared/errors'
+import { EXPORT_EXTENSIONS } from '../shared/export'
+import type { ExportFormat, ExportSavePayload, ExportSaveResult } from '../shared/export'
 import { translate } from '../shared/locales/translate'
+import type { MessageKey } from '../shared/locales/types'
 
 /** message 保留兼容；渲染端只用 error.code/params 翻译，原始诊断保留在 detail。 */
 function localizedFailure(error: AppError, context: IpcResultContext): IpcFailure {
@@ -50,6 +53,14 @@ interface AddNodeResult {
 
 /** 已知复合类型前缀，与 CLI data_type_first 取值一致 */
 const STRUCT_TYPE_KEYWORDS = ['struct', 'union', 'enum']
+
+/** 导出格式 → 原生保存对话框过滤器名称的翻译键 */
+const EXPORT_FILTER_NAME_KEYS: Record<ExportFormat, MessageKey> = {
+    pdf: 'native.pdfDocument',
+    png: 'native.pngImage',
+    svg: 'native.svgImage',
+    jpeg: 'native.jpegImage'
+}
 
 /**
  * 解析渲染进程传入的结构体标识：
@@ -559,4 +570,63 @@ export function registerIpcHandlers(): void {
             return { hash, title: hash }
         })
     })
+
+    // IPC: 将渲染进程生成的导出产物保存为本地文件。
+    // 二进制产物（pdf/png/jpeg）以 base64 主体写入；文本产物（svg 标记）以 utf-8 写入。
+    // 弹出原生「保存」对话框由用户选择路径与文件名，扩展名按格式补全。
+    // 返回 { status }：success（带 filePath）/ canceled（用户取消）/ failure（带可翻译错误码）。
+    ipcMain.handle(
+        'export:save-file',
+        async (_event, payload: ExportSavePayload): Promise<ExportSaveResult> => {
+            const locale = getSettingsLocale()
+            const format = payload?.format
+            const ext = EXPORT_EXTENSIONS[format]
+            // 缺格式或既无二进制主体也无文本主体：视为无效载荷，直接失败
+            if (!ext || (!payload?.dataBase64 && payload?.text == null)) {
+                console.warn('[Main] export:save-file: 载荷无效', {
+                    format,
+                    hasText: !!payload?.text
+                })
+                return { status: 'failure', error: { code: 'EXPORT_SAVE_FAILED' } }
+            }
+            const trimmedName =
+                typeof payload.defaultFileName === 'string' ? payload.defaultFileName.trim() : ''
+            const defaultPath = `${trimmedName || 'export'}.${ext}`
+            try {
+                const result = await dialog.showSaveDialog({
+                    title: translate(locale, 'native.exportFile'),
+                    buttonLabel: translate(locale, 'native.save'),
+                    defaultPath,
+                    filters: [
+                        {
+                            name: translate(locale, EXPORT_FILTER_NAME_KEYS[format]),
+                            extensions: [ext]
+                        }
+                    ]
+                })
+                if (result.canceled || !result.filePath) {
+                    return { status: 'canceled' }
+                }
+                if (payload.text != null) {
+                    writeFileSync(result.filePath, payload.text, 'utf-8')
+                } else {
+                    writeFileSync(
+                        result.filePath,
+                        Buffer.from(payload.dataBase64 as string, 'base64')
+                    )
+                }
+                console.log('[Main] 已导出 %s 文件:', format, result.filePath)
+                return { status: 'success', filePath: result.filePath }
+            } catch (err) {
+                console.error('[Main] export:save-file: 写入失败', err)
+                return {
+                    status: 'failure',
+                    error: {
+                        code: 'EXPORT_SAVE_FAILED',
+                        detail: err instanceof Error ? err.message : String(err)
+                    }
+                }
+            }
+        }
+    )
 }

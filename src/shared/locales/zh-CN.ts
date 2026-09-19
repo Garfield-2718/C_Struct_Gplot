@@ -93,6 +93,28 @@ export const zhCN = {
         version: '版本号',
         projectUrl: '项目地址'
     },
+    export: {
+        pageTitle: '导出',
+        title: '导出画布',
+        description: '选择导出格式并保存为本地文件。',
+        formatSection: '导出格式',
+        formatPdf: 'PDF 文档',
+        formatPdfHint: '适合打印与归档，单页嵌入高清位图',
+        formatPng: 'PNG 图片',
+        formatPngHint: '无损位图，以画布底色填充背景',
+        formatSvg: 'SVG 矢量图',
+        formatSvgHint: '可无限缩放的矢量图，便于二次编辑',
+        formatJpeg: 'JPEG 图片',
+        formatJpegHint: '有损压缩位图，文件体积更小',
+        fileName: '文件名',
+        fileNameHint: '无需填写扩展名，将按所选格式自动补全。',
+        save: '导出',
+        saving: '正在导出…',
+        success: '已导出到：{path}',
+        emptyTitle: '暂无可导出内容',
+        emptyDescription: '画布为空或快照生成失败，请返回画布添加节点后重试。',
+        backToCanvas: '返回画布'
+    },
     settings: {
         title: '设置',
         description: '配置界面语言、画布节点与连线的视觉样式。修改后需点击「保存」生效。',
@@ -139,7 +161,8 @@ export const zhCN = {
         cliFailed: '解析进程执行失败（退出码：{exitCode}）',
         cliTimeout: '解析进程超时（{timeout} 毫秒），已终止',
         nodeNotFound: '未找到节点',
-        nodeLoadFailed: '加载节点失败'
+        nodeLoadFailed: '加载节点失败',
+        exportSaveFailed: '导出文件失败'
     },
     native: {
         allFiles: '所有文件',
@@ -151,6 +174,12 @@ export const zhCN = {
         projectProcessed: '处理完成',
         databaseImported: '数据库导入成功',
         databaseValidated: '数据库结构校验通过',
+        exportFile: '导出文件',
+        save: '保存',
+        pdfDocument: 'PDF 文档',
+        pngImage: 'PNG 图片',
+        svgImage: 'SVG 矢量图',
+        jpegImage: 'JPEG 图片',
         fileMenu: '文件',
         editMenu: '编辑',
         viewMenu: '视图',

@@ -1,0 +1,332 @@
+/* ========== 导出页整体布局：顶部标题栏 + 内容工作区，与设置页保持一致的两行网格 ========== */
+.evw-page {
+    display: grid;
+    grid-template-rows: 44px minmax(0, 1fr);
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    background-color: var(--vs-editor-bg);
+    color: var(--vs-foreground);
+    font-size: 14px;
+    line-height: 22px;
+}
+
+/* ========== 标题栏：左侧返回按键 + 页面名，与设置页一致 ========== */
+.evw-titlebar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    padding: 0 12px 0 8px;
+    background-color: var(--vs-titlebar-bg);
+    border-bottom: 1px solid var(--vs-widget-border);
+    color: var(--vs-title-foreground);
+    user-select: none;
+}
+
+.evw-titlebar-text {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.evw-back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border: none;
+    border-radius: 2px;
+    background: transparent;
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 20px;
+    color: var(--vs-foreground);
+    cursor: pointer;
+}
+
+.evw-back-button:hover {
+    background-color: var(--vs-list-hover-bg);
+}
+
+.evw-back-button:active {
+    background-color: var(--vs-list-inactive-selection-bg);
+}
+
+.evw-back-button:focus-visible {
+    outline: 1px solid var(--vs-focus-border);
+    outline-offset: -2px;
+}
+
+.evw-back-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.evw-back-arrow {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-left: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg);
+}
+
+/* ========== 工作区：内容居中，超出滚动 ========== */
+.evw-workspace {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    padding: 24px;
+    overflow: auto;
+}
+
+.evw-content {
+    flex-shrink: 0;
+    width: 100%;
+    max-width: 720px;
+    min-width: 0;
+    margin: 0 auto;
+}
+
+.evw-title {
+    margin: 0;
+    color: var(--vs-title-foreground);
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 32px;
+}
+
+.evw-description {
+    margin: 8px 0 24px;
+    color: var(--vs-description-foreground);
+}
+
+/* ========== 分组卡片 ========== */
+.evw-section {
+    margin-bottom: 24px;
+    padding: 16px 20px;
+    background-color: var(--vs-sidebar-bg);
+    border: 1px solid var(--vs-widget-border);
+    border-radius: 2px;
+}
+
+.evw-section-title {
+    margin: 0 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--vs-widget-border);
+    color: var(--vs-title-foreground);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 20px;
+}
+
+/* ========== 格式单选：每项为一张可点击的卡片 ========== */
+.evw-format-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+}
+
+.evw-format-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+    border: 1px solid var(--vs-widget-border);
+    border-radius: 2px;
+    background-color: var(--vs-editor-bg);
+    cursor: pointer;
+}
+
+.evw-format-item:hover {
+    border-color: var(--vs-button-bg);
+}
+
+.evw-format-item.is-selected {
+    border-color: var(--vs-focus-border);
+    outline: 1px solid var(--vs-focus-border);
+    outline-offset: -2px;
+}
+
+.evw-format-radio {
+    margin-top: 3px;
+    flex-shrink: 0;
+    accent-color: var(--vs-button-bg);
+    cursor: pointer;
+}
+
+.evw-format-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.evw-format-label {
+    color: var(--vs-title-foreground);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 20px;
+}
+
+.evw-format-hint {
+    color: var(--vs-description-foreground);
+    font-size: 12px;
+    line-height: 18px;
+}
+
+/* ========== 文件名行 ========== */
+.evw-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.evw-row-label {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    color: var(--vs-title-foreground);
+    font-size: 13px;
+    line-height: 20px;
+}
+
+.evw-row-hint {
+    color: var(--vs-description-foreground);
+    font-size: 12px;
+    line-height: 18px;
+}
+
+.evw-row-control {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 10px;
+}
+
+.evw-text-input {
+    width: 240px;
+    max-width: 100%;
+    min-height: 30px;
+    padding: 3px 8px;
+    border: 1px solid var(--vs-input-border);
+    border-radius: 2px;
+    background-color: var(--vs-editor-bg);
+    color: var(--vs-foreground);
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 20px;
+}
+
+.evw-text-input:focus-visible {
+    border-color: var(--vs-focus-border);
+    outline: 1px solid var(--vs-focus-border);
+    outline-offset: 1px;
+}
+
+.evw-text-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.evw-dimension {
+    margin: 12px 0 0;
+    color: var(--vs-description-foreground);
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 12px;
+}
+
+/* ========== 反馈信息 ========== */
+.evw-success {
+    margin: 0 0 12px;
+    padding: 8px 12px;
+    border-left: 2px solid var(--vs-testing-icon-passed, #388a34);
+    background-color: var(--vs-sidebar-bg);
+    color: var(--vs-testing-icon-passed, #388a34);
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+.evw-error {
+    margin: 0 0 12px;
+    padding: 8px 12px;
+    border-left: 2px solid var(--vs-error-foreground);
+    background-color: var(--vs-sidebar-bg);
+    color: var(--vs-error-foreground);
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+/* ========== 底部操作区 ========== */
+.evw-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding: 12px 0 0;
+    border-top: 1px solid var(--vs-widget-border);
+}
+
+/* ========== 通用按键 ========== */
+.evw-button {
+    padding: 6px 16px;
+    border: 1px solid var(--vs-button-secondary-border);
+    border-radius: 2px;
+    background-color: var(--vs-button-secondary-bg);
+    color: var(--vs-button-secondary-fg);
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 20px;
+    cursor: pointer;
+}
+
+.evw-button:hover:not(:disabled) {
+    background-color: var(--vs-list-hover-bg);
+}
+
+.evw-button:focus-visible {
+    border-color: var(--vs-focus-border);
+    outline: 1px solid var(--vs-focus-border);
+    outline-offset: 1px;
+}
+
+.evw-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.evw-button-primary {
+    border-color: var(--vs-button-bg);
+    background-color: var(--vs-button-bg);
+    color: var(--vs-button-fg);
+}
+
+.evw-button-primary:hover:not(:disabled) {
+    border-color: var(--vs-button-hover-bg);
+    background-color: var(--vs-button-hover-bg);
+}
+
+/* ========== 空态：居中提示 ========== */
+.evw-empty {
+    margin: auto;
+    text-align: left;
+}
+
+/* ========== 窄屏适配 ========== */
+@media (max-width: 640px) {
+    .evw-workspace {
+        padding: 16px;
+    }
+
+    .evw-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .evw-text-input {
+        width: 100%;
+    }
+}
