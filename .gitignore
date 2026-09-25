@@ -4,7 +4,9 @@ node_modules/
 # Build output
 out/
 dist/
-build/
+# electron-builder 的 buildResources 目录为 build/，其中图标需纳入版本管理
+build/*
+!build/icon.ico
 dist_electron/
 release/
 
