@@ -1,13 +1,13 @@
 import { inject, reactive, watch } from 'vue'
 import type { App, InjectionKey } from 'vue'
-import { cloneSettings, normalizeSettings } from '../../../shared/settings'
-import type { ColorSettingKey, SettingsData, SettingsState } from '../../../shared/settings'
-import { SETTINGS_SAVE_ERROR_CODE } from '../../../shared/errors'
+import { cloneSettings, normalizeSettings } from '@shared/settings'
+import type { ColorSettingKey, SettingsData, SettingsState } from '@shared/settings'
+import { SETTINGS_SAVE_ERROR_CODE } from '@shared/errors'
 import { setAppLocale } from '@/i18n'
 
 // 保留原有导出路径，画布和节点组件无需改动。
-export { DEFAULT_SETTINGS } from '../../../shared/settings'
-export type { ColorSettingKey, SettingsData, SettingsState } from '../../../shared/settings'
+export { DEFAULT_SETTINGS } from '@shared/settings'
+export type { ColorSettingKey, SettingsData, SettingsState } from '@shared/settings'
 
 /** 唯一的已应用状态；设置页草稿不直接修改此对象。 */
 const settingsStore = reactive<SettingsData>(normalizeSettings(null))

@@ -1,7 +1,7 @@
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import type { ComputedRef, Ref } from 'vue'
 import type { StructNodeData, StructNodeRecord } from '@/views/canvas_view/useCanvasView'
-import type { MessageKey } from '../../../../shared/locales/types'
+import type { MessageKey } from '@shared/locales/types'
 
 /** 侧边栏宽度允许的范围（px） */
 const MIN_SIDEBAR_WIDTH = 160

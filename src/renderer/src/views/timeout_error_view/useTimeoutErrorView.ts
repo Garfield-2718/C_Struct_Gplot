@@ -2,7 +2,7 @@ import { computed } from 'vue'
 import type { ComputedRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import type { ProcessProjectResult } from '../../../../shared/errors'
+import type { ProcessProjectResult } from '@shared/errors'
 
 /** useTimeoutErrorView 对模板暴露的接口；显式声明以满足 explicit-function-return-type 规则 */
 export interface TimeoutErrorViewApi {

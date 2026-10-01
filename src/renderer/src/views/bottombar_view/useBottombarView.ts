@@ -2,8 +2,8 @@ import { ref, computed, nextTick } from 'vue'
 import type { Ref, ComputedRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { StructNodeRecord } from '@/views/canvas_view/useCanvasView'
-import { errorMessageKey } from '../../../../shared/errors'
-import type { AppError } from '../../../../shared/errors'
+import { errorMessageKey } from '@shared/errors'
+import type { AppError } from '@shared/errors'
 
 /** add-node 通道返回结构，与主进程 ipc-handlers.ts 的 AddNodeResult 对齐 */
 interface AddNodeResult {

@@ -10,7 +10,7 @@ import {
 import type { ComputedRef, Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useVueFlow } from '@vue-flow/core'
-import type { MessageKey } from '../../../../shared/locales/types'
+import type { MessageKey } from '@shared/locales/types'
 
 interface CanvasI18nApi {
     minZoomReached: ComputedRef<boolean>
