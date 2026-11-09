@@ -1,8 +1,8 @@
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { errorMessageKey } from '../../../../shared/errors'
-import type { AppError, ImportDbResult, ProcessProjectResult } from '../../../../shared/errors'
+import { errorMessageKey } from '@shared/errors'
+import type { AppError, ImportDbResult, ProcessProjectResult } from '@shared/errors'
 
 const DESIGN_WIDTH = 1920
 const DESIGN_HEIGHT = 1080

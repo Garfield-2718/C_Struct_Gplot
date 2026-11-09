@@ -2,7 +2,7 @@ import { onMounted, ref } from 'vue'
 import type { Ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import type { MessageKey } from '../../../../shared/locales/types'
+import type { MessageKey } from '@shared/locales/types'
 
 /** useHelpView 对模板暴露的接口；显式声明以满足 explicit-function-return-type 规则 */
 export interface HelpViewApi {

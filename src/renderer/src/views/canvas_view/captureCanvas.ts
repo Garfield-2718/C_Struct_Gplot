@@ -1,7 +1,7 @@
 import type { InjectionKey } from 'vue'
 import { getRectOfNodes, getTransformForBounds } from '@vue-flow/core'
 import type { GraphNode } from '@vue-flow/core'
-import type { ExportFormat } from '../../../../shared/export'
+import type { ExportFormat } from '@shared/export'
 
 // html-to-image / jspdf 体积较大（合计约 900KB），且仅导出时才需要；
 // 用动态 import 让其拆分为独立 chunk，避免拖慢画布首屏。

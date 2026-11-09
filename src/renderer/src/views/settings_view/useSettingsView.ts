@@ -3,11 +3,11 @@ import type { ComputedRef } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { DEFAULT_SETTINGS, persistSettings, useSettings } from '@/stores/settings'
-import { cloneSettings, LOCALE_OPTIONS } from '../../../../shared/settings'
-import type { ColorSettingKey, SettingsData, SettingsState } from '../../../../shared/settings'
-import { errorMessageKey, SETTINGS_SAVE_ERROR_CODE } from '../../../../shared/errors'
-import type { AppErrorCode } from '../../../../shared/errors'
-import type { MessageKey } from '../../../../shared/locales/types'
+import { cloneSettings, LOCALE_OPTIONS } from '@shared/settings'
+import type { ColorSettingKey, SettingsData, SettingsState } from '@shared/settings'
+import { errorMessageKey, SETTINGS_SAVE_ERROR_CODE } from '@shared/errors'
+import type { AppErrorCode } from '@shared/errors'
+import type { MessageKey } from '@shared/locales/types'
 
 // 复用全局 store 中的类型，保持向后兼容的导出
 export type { SettingsState }

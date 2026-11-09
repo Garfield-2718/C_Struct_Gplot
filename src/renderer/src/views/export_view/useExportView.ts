@@ -4,10 +4,10 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useExportArtifacts, clearExportArtifacts } from './exportStore'
 import { buildExportPayloadData } from '../canvas_view/captureCanvas'
-import type { ExportFormat, ExportSavePayload, ExportSaveResult } from '../../../../shared/export'
-import { errorMessageKey } from '../../../../shared/errors'
-import type { AppErrorCode } from '../../../../shared/errors'
-import type { MessageKey, TranslationParams } from '../../../../shared/locales/types'
+import type { ExportFormat, ExportSavePayload, ExportSaveResult } from '@shared/export'
+import { errorMessageKey } from '@shared/errors'
+import type { AppErrorCode } from '@shared/errors'
+import type { MessageKey, TranslationParams } from '@shared/locales/types'
 
 /** 格式单选项元数据：驱动 UI 循环渲染，翻译键在模板求值以响应语言切换 */
 export interface ExportFormatOption {
